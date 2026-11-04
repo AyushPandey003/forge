@@ -1,0 +1,46 @@
+package server
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+)
+
+// livezResponse is the payload of /livez.
+type livezResponse struct {
+	Status string `json:"status"`
+}
+
+// readyzResponse is the payload of /readyz; Checks is always present, even
+// when no readiness checks are configured.
+type readyzResponse struct {
+	Status string            `json:"status"`
+	Checks map[string]string `json:"checks"`
+}
+
+func (h handlers) livez(c *gin.Context) {
+	c.JSON(http.StatusOK, livezResponse{Status: "ok"})
+}
+
+func (h handlers) readyz(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+	defer cancel()
+
+	checks := make(map[string]string, len(h.deps.readinessChecks))
+	ready := true
+	for _, check := range h.deps.readinessChecks {
+		if err := check.fn(ctx); err != nil {
+			checks[check.name] = "error"
+			ready = false
+			continue
+		}
+		checks[check.name] = "ok"
+	}
+	if !ready {
+		c.JSON(http.StatusServiceUnavailable, readyzResponse{Status: "error", Checks: checks})
+		return
+	}
+	c.JSON(http.StatusOK, readyzResponse{Status: "ok", Checks: checks})
+}

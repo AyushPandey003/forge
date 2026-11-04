@@ -1,0 +1,1855 @@
+basePath: /
+definitions:
+  auth.Principal:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      picture_url:
+        type: string
+      type:
+        $ref: '#/definitions/auth.PrincipalType'
+    type: object
+  auth.PrincipalType:
+    enum:
+    - user
+    - service_account
+    - google_group
+    - anyone
+    - anonymous
+    type: string
+    x-enum-varnames:
+    - PrincipalUser
+    - PrincipalServiceAccount
+    - PrincipalGoogleGroup
+    - PrincipalAnyone
+    - PrincipalAnonymous
+  repo.Anchor:
+    properties:
+      dom_path:
+        type: string
+      end_offset:
+        type: integer
+      prefix:
+        type: string
+      quote:
+        type: string
+      start_offset:
+        type: integer
+      suffix:
+        type: string
+    type: object
+  repo.CLICredential:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  repo.Document:
+    properties:
+      current_version_id:
+        type: string
+      id:
+        type: string
+      labels:
+        items:
+          type: string
+        type: array
+      owner:
+        $ref: '#/definitions/auth.Principal'
+      parent_folder:
+        $ref: '#/definitions/repo.FolderBreadcrumb'
+      parent_folder_id:
+        type: string
+      snippet:
+        description: |-
+          Snippet is set in search results when the text matches. U+0002 and
+          U+0003 surround each match.
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  repo.FolderBreadcrumb:
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+    type: object
+  repo.Grant:
+    properties:
+      document_id:
+        type: string
+      granted_by:
+        $ref: '#/definitions/auth.Principal'
+      id:
+        type: string
+      principal:
+        $ref: '#/definitions/auth.Principal'
+      resource_id:
+        type: string
+      resource_type:
+        type: string
+      role:
+        $ref: '#/definitions/repo.Role'
+    type: object
+  repo.NotificationPreferences:
+    properties:
+      effective_enabled:
+        type: boolean
+      enabled:
+        type: boolean
+    type: object
+  repo.OwnershipTransfer:
+    properties:
+      from_user_id:
+        type: string
+      id:
+        type: string
+      service_account_id:
+        type: string
+      status:
+        type: string
+      to_user_id:
+        type: string
+    type: object
+  repo.Role:
+    enum:
+    - ""
+    - viewer
+    - commenter
+    - editor
+    - owner
+    type: string
+    x-enum-varnames:
+    - RoleNone
+    - RoleViewer
+    - RoleCommenter
+    - RoleEditor
+    - RoleOwner
+  repo.ServiceAccount:
+    properties:
+      disabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      owner:
+        $ref: '#/definitions/auth.Principal'
+    type: object
+  repo.ServiceAccountKey:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  repo.Version:
+    properties:
+      change_summary:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        $ref: '#/definitions/auth.Principal'
+      document_id:
+        type: string
+      id:
+        type: string
+      number:
+        type: integer
+      sha256:
+        type: string
+    type: object
+  server.cliExchangePrincipal:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      type:
+        type: string
+    type: object
+  server.cliExchangeResponse:
+    properties:
+      id:
+        type: string
+      principal:
+        $ref: '#/definitions/server.cliExchangePrincipal'
+      token:
+        type: string
+    type: object
+  server.commentMentionPrincipalRef:
+    properties:
+      id:
+        type: string
+      type:
+        $ref: '#/definitions/server.commentMentionPrincipalType'
+    type: object
+  server.commentMentionPrincipalResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      picture_url:
+        type: string
+      type:
+        $ref: '#/definitions/server.commentMentionPrincipalType'
+    type: object
+  server.commentMentionPrincipalType:
+    enum:
+    - user
+    - service_account
+    type: string
+    x-enum-varnames:
+    - commentMentionPrincipalUser
+    - commentMentionPrincipalServiceAccount
+  server.commentMentionRequest:
+    properties:
+      length:
+        description: Length is the range length in UTF-16 code units.
+        type: integer
+      offset:
+        description: Offset is the zero-based start in UTF-16 code units.
+        type: integer
+      principal:
+        $ref: '#/definitions/server.commentMentionPrincipalRef'
+    type: object
+  server.commentMentionResponse:
+    properties:
+      length:
+        description: Length is the range length in UTF-16 code units.
+        type: integer
+      offset:
+        description: Offset is the zero-based start in UTF-16 code units.
+        type: integer
+      principal:
+        $ref: '#/definitions/server.commentMentionPrincipalResponse'
+    type: object
+  server.commentPlacementResponse:
+    properties:
+      anchor:
+        $ref: '#/definitions/repo.Anchor'
+      confidence:
+        type: number
+      matched_text:
+        type: string
+      status:
+        type: string
+      version_id:
+        type: string
+    type: object
+  server.commentReactionResponse:
+    properties:
+      count:
+        type: integer
+      emoji:
+        type: string
+      reacted:
+        type: boolean
+      reactors:
+        items:
+          $ref: '#/definitions/server.principalResponse'
+        type: array
+    type: object
+  server.commentResponse:
+    properties:
+      anchor:
+        $ref: '#/definitions/repo.Anchor'
+      author:
+        $ref: '#/definitions/server.principalResponse'
+      body:
+        type: string
+      created_at:
+        type: string
+      created_on_version_id:
+        type: string
+      current_placement:
+        $ref: '#/definitions/server.commentPlacementResponse'
+      id:
+        type: string
+      mentions:
+        items:
+          $ref: '#/definitions/server.commentMentionResponse'
+        type: array
+      parent_comment_id:
+        type: string
+      reactions:
+        items:
+          $ref: '#/definitions/server.commentReactionResponse'
+        type: array
+      replies:
+        items:
+          $ref: '#/definitions/server.commentResponse'
+        type: array
+      resolved_at:
+        type: string
+      selected_text:
+        type: string
+      status:
+        type: string
+    type: object
+  server.configResponse:
+    properties:
+      default_doc_permission:
+        type: string
+      deployment:
+        type: string
+      everyone_label:
+        type: string
+      google_groups_enabled:
+        type: boolean
+      labels_enabled:
+        type: boolean
+      org_name:
+        type: string
+      provider_name:
+        type: string
+    type: object
+  server.createCommentReplyRequest:
+    properties:
+      body:
+        type: string
+      mentions:
+        items:
+          $ref: '#/definitions/server.commentMentionRequest'
+        type: array
+    type: object
+  server.createCommentRequest:
+    properties:
+      anchor:
+        $ref: '#/definitions/repo.Anchor'
+      body:
+        type: string
+      mentions:
+        items:
+          $ref: '#/definitions/server.commentMentionRequest'
+        type: array
+      version_id:
+        type: string
+    type: object
+  server.createDocumentResponse:
+    properties:
+      current_version_id:
+        type: string
+      default_grant:
+        $ref: '#/definitions/server.defaultGrant'
+      id:
+        type: string
+    type: object
+  server.createGrantResponse:
+    properties:
+      granted_by:
+        $ref: '#/definitions/server.grantGrantedBy'
+      id:
+        type: string
+      principal:
+        $ref: '#/definitions/server.grantPrincipal'
+      resource:
+        $ref: '#/definitions/server.grantResource'
+      role:
+        $ref: '#/definitions/repo.Role'
+    type: object
+  server.createServiceAccountResponse:
+    properties:
+      disabled:
+        type: boolean
+      grants:
+        items: {}
+        type: array
+      id:
+        type: string
+      key:
+        $ref: '#/definitions/server.serviceAccountKey'
+      label:
+        type: string
+      name:
+        type: string
+      owner:
+        $ref: '#/definitions/server.serviceAccountOwner'
+    type: object
+  server.createVersionResponse:
+    properties:
+      change_summary:
+        type: string
+      id:
+        type: string
+      number:
+        type: integer
+      sha256:
+        type: string
+    type: object
+  server.defaultGrant:
+    properties:
+      grant_id:
+        type: string
+      principal:
+        $ref: '#/definitions/server.defaultGrantPrincipal'
+      role:
+        $ref: '#/definitions/repo.Role'
+    type: object
+  server.defaultGrantPrincipal:
+    properties:
+      type:
+        $ref: '#/definitions/auth.PrincipalType'
+    type: object
+  server.discoveryAuth:
+    properties:
+      modes:
+        items:
+          type: string
+        type: array
+    type: object
+  server.discoveryResponse:
+    properties:
+      api_version:
+        type: string
+      auth:
+        $ref: '#/definitions/server.discoveryAuth'
+      name:
+        type: string
+    type: object
+  server.documentLinkResponse:
+    properties:
+      url:
+        type: string
+    type: object
+  server.errorBody:
+    properties:
+      code:
+        type: string
+      details: {}
+      message:
+        type: string
+    type: object
+  server.errorEnvelope:
+    properties:
+      error:
+        $ref: '#/definitions/server.errorBody'
+    type: object
+  server.googleGroupSearchItem:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  server.googleGroupSearchResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/server.googleGroupSearchItem'
+        type: array
+    type: object
+  server.grantGrantedBy:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+    type: object
+  server.grantInput:
+    properties:
+      address:
+        type: string
+      principal:
+        $ref: '#/definitions/server.grantPrincipalInput'
+      role:
+        allOf:
+        - $ref: '#/definitions/repo.Role'
+        enum:
+        - viewer
+        - commenter
+        - editor
+    type: object
+  server.grantPrincipal:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        $ref: '#/definitions/auth.PrincipalType'
+    type: object
+  server.grantPrincipalInput:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        allOf:
+        - $ref: '#/definitions/auth.PrincipalType'
+        enum:
+        - user
+        - service_account
+        - google_group
+        - anyone
+    type: object
+  server.grantResource:
+    properties:
+      id:
+        type: string
+      type:
+        type: string
+    type: object
+  server.headingResponse:
+    properties:
+      id:
+        type: string
+      level:
+        type: integer
+      text:
+        type: string
+      url:
+        type: string
+    type: object
+  server.listResponse-repo_CLICredential:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repo.CLICredential'
+        type: array
+    type: object
+  server.listResponse-repo_Document:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repo.Document'
+        type: array
+    type: object
+  server.listResponse-repo_OwnershipTransfer:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repo.OwnershipTransfer'
+        type: array
+    type: object
+  server.listResponse-repo_ServiceAccount:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repo.ServiceAccount'
+        type: array
+    type: object
+  server.listResponse-repo_ServiceAccountKey:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repo.ServiceAccountKey'
+        type: array
+    type: object
+  server.listResponse-repo_Version:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/repo.Version'
+        type: array
+    type: object
+  server.listResponse-server_commentResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/server.commentResponse'
+        type: array
+    type: object
+  server.listResponse-server_headingResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/server.headingResponse'
+        type: array
+    type: object
+  server.meResponse:
+    properties:
+      principal:
+        $ref: '#/definitions/server.principalRef'
+      service_account:
+        $ref: '#/definitions/server.meServiceAccount'
+      user:
+        $ref: '#/definitions/server.userResponse'
+    type: object
+  server.meServiceAccount:
+    properties:
+      disabled:
+        type: boolean
+      id:
+        type: string
+      name:
+        type: string
+      owner:
+        $ref: '#/definitions/server.meServiceOwner'
+    type: object
+  server.meServiceOwner:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  server.notificationPreferencesRequest:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  server.patchCommentRequest:
+    properties:
+      body:
+        type: string
+      mentions:
+        items:
+          $ref: '#/definitions/server.commentMentionRequest'
+        type: array
+      status:
+        type: string
+    type: object
+  server.principalRef:
+    properties:
+      id:
+        type: string
+      type:
+        $ref: '#/definitions/auth.PrincipalType'
+    type: object
+  server.principalResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      picture_url:
+        type: string
+      type:
+        $ref: '#/definitions/auth.PrincipalType'
+    type: object
+  server.renderTokenResponse:
+    properties:
+      token:
+        type: string
+      url:
+        type: string
+    type: object
+  server.serviceAccountKey:
+    properties:
+      id:
+        type: string
+      token:
+        type: string
+    type: object
+  server.serviceAccountOwner:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+    type: object
+  server.userResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      picture_url:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This API powers slashdocs, a collaborative workspace where agents and
+    people publish self-contained HTML documents, comment on specific text ranges
+    inside them, and publish new versions.
+  title: slashdocs API
+  version: v1
+paths:
+  /.well-known/slashdocs.json:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.discoveryResponse'
+      summary: Deployment discovery
+      tags:
+      - discovery
+  /commit.txt:
+    get:
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Build commit SHA
+      tags:
+      - discovery
+  /v/{id}/{version_id}:
+    get:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: version_id
+        required: true
+        type: string
+      - description: Render token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Render version wrapper
+      tags:
+      - render
+  /v1/auth/cli/credentials:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.listResponse-repo_CLICredential'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: List CLI credentials
+      tags:
+      - auth
+  /v1/auth/cli/credentials/{id}:
+    delete:
+      parameters:
+      - description: Credential ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Revoke CLI credential
+      tags:
+      - auth
+  /v1/auth/cli/exchange:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.cliExchangeResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/server.errorEnvelope'
+      summary: Exchange CLI login code
+      tags:
+      - auth
+  /v1/auth/google/callback:
+    get:
+      parameters:
+      - description: OAuth code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth state
+        in: query
+        name: state
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Found
+      summary: OIDC login callback
+      tags:
+      - auth
+  /v1/auth/google/start:
+    get:
+      parameters:
+      - description: web or cli
+        in: query
+        name: mode
+        type: string
+      - description: web redirect
+        in: query
+        name: redirect
+        type: string
+      - description: CLI loopback redirect
+        in: query
+        name: cli_redirect
+        type: string
+      - description: PKCE challenge
+        in: query
+        name: code_challenge
+        type: string
+      - description: CLI correlation state; web state is generated by the server
+        in: query
+        name: state
+        type: string
+      responses:
+        "302":
+          description: Found
+      summary: Start OIDC login
+      tags:
+      - auth
+  /v1/auth/logout:
+    post:
+      description: Clears the session cookie. CLI credentials stay valid.
+      responses:
+        "204":
+          description: No Content
+      summary: End the browser session
+      tags:
+      - auth
+  /v1/auth/oidc/callback:
+    get:
+      parameters:
+      - description: OAuth code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: OAuth state
+        in: query
+        name: state
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Found
+      summary: OIDC login callback
+      tags:
+      - auth
+  /v1/auth/oidc/start:
+    get:
+      parameters:
+      - description: web or cli
+        in: query
+        name: mode
+        type: string
+      - description: web redirect
+        in: query
+        name: redirect
+        type: string
+      - description: CLI loopback redirect
+        in: query
+        name: cli_redirect
+        type: string
+      - description: PKCE challenge
+        in: query
+        name: code_challenge
+        type: string
+      - description: CLI correlation state; web state is generated by the server
+        in: query
+        name: state
+        type: string
+      responses:
+        "302":
+          description: Found
+      summary: Start OIDC login
+      tags:
+      - auth
+  /v1/config:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.configResponse'
+      summary: Deployment configuration
+      tags:
+      - discovery
+  /v1/documents:
+    get:
+      parameters:
+      - description: 'Slack-style search of titles and text: words, \'
+        in: query
+        name: q
+        type: string
+      - description: IANA time zone for date modifiers; defaults to UTC
+        in: query
+        name: tz
+        type: string
+      - description: Deprecated exact label filter; use q=label:<label>
+        in: query
+        name: label
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.listResponse-repo_Document'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: List documents
+      tags:
+      - documents
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Document title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Single-file HTML
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 'Default sharing applied at create: viewer, commenter, editor
+          or private. Overrides the server-wide default.'
+        in: formData
+        name: default_permission
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/server.createDocumentResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Create document
+      tags:
+      - documents
+  /v1/documents/{id}:
+    delete:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Delete document
+      tags:
+      - documents
+    get:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.Document'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Get document
+      tags:
+      - documents
+    patch:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.Document'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Update document
+      tags:
+      - documents
+  /v1/documents/{id}/access-requests:
+    post:
+      description: Notifies the current owner without revealing whether the document
+        or owner exists. Repeated requests are coalesced.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Request access to a document
+      tags:
+      - documents
+  /v1/documents/{id}/comments:
+    get:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: open|resolved|stale|orphaned|all
+        in: query
+        name: status
+        type: string
+      - description: Version ID
+        in: query
+        name: version_id
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.listResponse-server_commentResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: List comments
+      tags:
+      - comments
+    post:
+      consumes:
+      - application/json
+      - application/vnd.slashdocs.comment-mentions+json
+      description: Requests with non-empty mentions must use Content-Type application/vnd.slashdocs.comment-mentions+json
+        so mixed-version deployments fail closed instead of dropping metadata.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Comment body, anchor, and structured mentions
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/server.createCommentRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/server.commentResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Create comment
+      tags:
+      - comments
+  /v1/documents/{id}/comments/{comment_id}:
+    delete:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Delete comment
+      tags:
+      - comments
+    patch:
+      consumes:
+      - application/json
+      - application/vnd.slashdocs.comment-mentions+json
+      description: Any request containing the mentions key, including an empty array,
+        must use Content-Type application/vnd.slashdocs.comment-mentions+json so mixed-version
+        deployments fail closed.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: Fields to update; omitted mentions are preserved unless the body
+          changes
+        in: body
+        name: update
+        required: true
+        schema:
+          $ref: '#/definitions/server.patchCommentRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.commentResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Update comment
+      tags:
+      - comments
+  /v1/documents/{id}/comments/{comment_id}/reactions/{emoji}:
+    delete:
+      description: Removes the caller's reaction from a comment or reply. Removing
+        an absent reaction is a no-op.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: Reaction slug
+        enum:
+        - "+1"
+        - "-1"
+        - laugh
+        - hooray
+        - confused
+        - heart
+        - rocket
+        - eyes
+        - plus
+        in: path
+        name: emoji
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Remove comment reaction
+      tags:
+      - comments
+    put:
+      description: Adds the caller's reaction to a comment or reply. Repeating the
+        same reaction is a no-op.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: Reaction slug
+        enum:
+        - "+1"
+        - "-1"
+        - laugh
+        - hooray
+        - confused
+        - heart
+        - rocket
+        - eyes
+        - plus
+        in: path
+        name: emoji
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Add comment reaction
+      tags:
+      - comments
+  /v1/documents/{id}/comments/{comment_id}/replies:
+    post:
+      consumes:
+      - application/json
+      - application/vnd.slashdocs.comment-mentions+json
+      description: Requests with non-empty mentions must use Content-Type application/vnd.slashdocs.comment-mentions+json
+        so mixed-version deployments fail closed instead of dropping metadata.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Parent Comment ID
+        in: path
+        name: comment_id
+        required: true
+        type: string
+      - description: Reply body and structured mentions
+        in: body
+        name: reply
+        required: true
+        schema:
+          $ref: '#/definitions/server.createCommentReplyRequest'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/server.commentResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Create comment reply
+      tags:
+      - comments
+  /v1/documents/{id}/grants:
+    post:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/server.createGrantResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Create document grant
+      tags:
+      - grants
+  /v1/documents/{id}/grants/{grant_id}:
+    delete:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Grant ID
+        in: path
+        name: grant_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Delete document grant
+      tags:
+      - grants
+    patch:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Grant ID
+        in: path
+        name: grant_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.Grant'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Update document grant
+      tags:
+      - grants
+  /v1/documents/{id}/headings:
+    get:
+      description: Lists headings in stored HTML. Explicit HTML IDs are preserved.
+        JavaScript-only headings appear in the viewer when created.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID (pins links to this version)
+        in: query
+        name: version
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.listResponse-server_headingResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: List document headings and shareable links
+      tags:
+      - documents
+  /v1/documents/{id}/link:
+    get:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Comment or reply ID
+        in: query
+        name: comment
+        type: string
+      - description: Heading ID, including an ID created by document JavaScript
+        in: query
+        name: heading
+        type: string
+      - description: Version ID for a heading or document link
+        in: query
+        name: version
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.documentLinkResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Get a shareable link to a document, comment, or heading
+      tags:
+      - documents
+  /v1/documents/{id}/notifications:
+    get:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.NotificationPreferences'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Read your notification preferences for a document
+      tags:
+      - notifications
+    put:
+      consumes:
+      - application/json
+      description: Personal preference only. Global disable overrides this preference.
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Notification preference
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.notificationPreferencesRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.NotificationPreferences'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Enable or mute your document notifications
+      tags:
+      - notifications
+  /v1/documents/{id}/versions:
+    get:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.listResponse-repo_Version'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: List versions
+      tags:
+      - versions
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Base version ID
+        in: formData
+        name: base_version_id
+        required: true
+        type: string
+      - description: Change summary
+        in: formData
+        name: change_summary
+        type: string
+      - description: HTML file
+        in: formData
+        name: file
+        required: true
+        type: file
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/server.createVersionResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Create version
+      tags:
+      - versions
+  /v1/documents/{id}/versions/{version_id}:
+    get:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: version_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.Version'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Get version metadata
+      tags:
+      - versions
+  /v1/documents/{id}/versions/{version_id}/html:
+    get:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: version_id
+        required: true
+        type: string
+      produces:
+      - text/html
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Get version HTML
+      tags:
+      - versions
+  /v1/documents/{id}/versions/{version_id}/render-token:
+    post:
+      parameters:
+      - description: Document ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Version ID
+        in: path
+        name: version_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.renderTokenResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Create render token
+      tags:
+      - versions
+  /v1/folders/{id}/grants:
+    post:
+      parameters:
+      - description: Folder ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Grant target and role; google_group principals are resolved from
+          principal.email
+        in: body
+        name: grant
+        required: true
+        schema:
+          $ref: '#/definitions/server.grantInput'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/repo.Grant'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Create folder grant
+      tags:
+      - grants
+  /v1/google-groups:
+    get:
+      parameters:
+      - description: Email or display-name query (minimum 2 characters)
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.googleGroupSearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "503":
+          description: Service Unavailable
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Search verified organization Google Groups
+      tags:
+      - google-groups
+  /v1/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.meResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/server.errorEnvelope'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Current principal
+      tags:
+      - auth
+  /v1/me/notifications:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.NotificationPreferences'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Read your notification preferences
+      tags:
+      - notifications
+    put:
+      consumes:
+      - application/json
+      description: Applies only to the authenticated principal. Document preferences
+        never change access or other users' notifications. Global disable overrides
+        document preferences.
+      parameters:
+      - description: Notification preference
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/server.notificationPreferencesRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.NotificationPreferences'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Set your notification preferences
+      tags:
+      - notifications
+  /v1/service-accounts:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.listResponse-repo_ServiceAccount'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: List service accounts
+      tags:
+      - service-accounts
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/server.createServiceAccountResponse'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Create service account
+      tags:
+      - service-accounts
+  /v1/service-accounts/{id}:
+    patch:
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.ServiceAccount'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Update service account
+      tags:
+      - service-accounts
+  /v1/service-accounts/{id}/keys:
+    get:
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.listResponse-repo_ServiceAccountKey'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: List service account keys
+      tags:
+      - service-accounts
+    post:
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/server.serviceAccountKey'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Create service account key
+      tags:
+      - service-accounts
+  /v1/service-accounts/{id}/keys/{key_id}:
+    delete:
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Key ID
+        in: path
+        name: key_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Revoke service account key
+      tags:
+      - service-accounts
+  /v1/service-accounts/{id}/transfer:
+    post:
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/repo.OwnershipTransfer'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Initiate service account ownership transfer
+      tags:
+      - service-accounts
+  /v1/service-accounts/transfers:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/server.listResponse-repo_OwnershipTransfer'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: List service account ownership transfers
+      tags:
+      - service-accounts
+  /v1/service-accounts/transfers/{id}/accept:
+    post:
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/repo.OwnershipTransfer'
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Accept ownership transfer
+      tags:
+      - service-accounts
+  /v1/service-accounts/transfers/{id}/decline:
+    post:
+      parameters:
+      - description: Transfer ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+      security:
+      - bearerAuth: []
+      - cookieAuth: []
+      summary: Decline ownership transfer
+      tags:
+      - service-accounts
+securityDefinitions:
+  bearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+  cookieAuth:
+    in: cookie
+    name: slashdocs_session
+    type: apiKey
+swagger: "2.0"

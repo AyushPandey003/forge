@@ -1,0 +1,239 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Check Go formatting
+        run: |
+          unformatted="$(gofmt -l api cli internal skills)"
+          if [ -n "$unformatted" ]; then
+            echo "gofmt needed on:"; echo "$unformatted"; exit 1
+          fi
+
+      # golangci-lint at the version that the Makefile pins, then the frontend
+      # lint and format checks.
+      - name: Lint Go and frontend
+        run: make lint
+
+      - name: Lint Helm chart
+        run: helm lint charts/slashdocs
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    # Go tests need PostgreSQL. A service container skips the per-package
+    # testcontainers startup; locally, plain `go test ./...` starts a
+    # disposable container via Docker (see api/internal/testdb).
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      # `npm run build` already typechecks via tsc -b; a separate --noEmit
+      # pass would repeat the same work.
+      - name: Build frontend test assets
+        run: npm run build --prefix frontend
+
+      - name: Test frontend
+        run: npm test --prefix frontend
+
+      - name: Test Go
+        run: go test ./...
+        env:
+          SLASHDOCS_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
+
+  e2e:
+    name: E2E compose and browser
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build the stack image once with the shared layer cache; the compose
+      # stack reuses these layers instead of rebuilding the frontend and Go
+      # stages from scratch.
+      - name: Build stack image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          load: true
+          tags: slashdocs-e2e:ci
+          build-args: |
+            SLASHDOCS_VERSION=${{ github.sha }}
+            SLASHDOCS_COMMIT_SHA=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run compose smoke suite
+        run: scripts/e2e.sh
+        env:
+          SLASHDOCS_IMAGE: slashdocs-e2e:ci
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix frontend
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Run browser E2E against the running stack
+        run: npm run e2e --prefix frontend
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+      - name: Tear down stack
+        if: always()
+        run: scripts/e2e.sh down
+
+  image:
+    name: Docker image
+    runs-on: ubuntu-latest
+    needs: test
+    env:
+      # Each commit on master is published as razorpay/slashdocs:master and
+      # :sha-<commit>. Pull requests only build. Only a stable release tag
+      # moves :latest, in release.yml.
+      PUBLISH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+      # Published images sign their CLIs, as releases do. Pull requests run
+      # code that nobody reviewed yet, so they never get the private key.
+      SLASHDOCS_CLI_SIGNING_PRIVATE_KEY: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' && secrets.SLASHDOCS_CLI_SIGNING_PRIVATE_KEY || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # The version counts the commits since the latest release tag.
+          fetch-depth: 0
+
+      # A build is the next patch after the latest stable tag, as a pre-release
+      # that counts the commits since that tag, for example v0.2.1-master.12.
+      # Each master build thus ranks above the one before it and below the
+      # next release, so CLIs update in order.
+      - name: Version
+        id: version
+        run: |
+          tag=$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1 || true)
+          IFS=. read -r major minor patch <<<"${tag:-v0.0.0}"
+          count=$(git rev-list --count "${tag:+$tag..}HEAD")
+          echo "version=${major}.${minor}.$((patch + 1))-master.${count}" >>"$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: env.PUBLISH == 'true'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.PUBLIC_DOCKER_USERNAME }}
+          password: ${{ secrets.PUBLIC_DOCKER_PASSWORD }}
+
+      # Proves the release Dockerfile builds for both platforms on every
+      # change.
+      - name: Build multi-arch image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: ${{ env.PUBLISH == 'true' }}
+          tags: |
+            razorpay/slashdocs:master
+            razorpay/slashdocs:sha-${{ github.sha }}
+          build-args: |
+            SLASHDOCS_VERSION=${{ steps.version.outputs.version }}
+            SLASHDOCS_COMMIT_SHA=${{ github.sha }}
+            SLASHDOCS_CLI_SIGNING_PUBLIC_KEY=${{ vars.SLASHDOCS_CLI_SIGNING_PUBLIC_KEY }}
+          secret-envs: |
+            SLASHDOCS_CLI_SIGNING_PRIVATE_KEY=SLASHDOCS_CLI_SIGNING_PRIVATE_KEY
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
