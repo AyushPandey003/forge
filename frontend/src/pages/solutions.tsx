@@ -27,6 +27,7 @@ import {
 } from "@kalvi-education/katalyst/components/empty";
 import { Tabs, TabsList, TabsTrigger } from "@kalvi-education/katalyst/components/tabs";
 import { Page } from "@/components/layout/page";
+import { useForgeLive } from "@/lib/use-forge-live";
 import { useTitle } from "@/lib/use-title";
 import {
   ROLE_LABEL,
@@ -37,6 +38,7 @@ import {
 import { formatTimestamp } from "@/lib/format-date";
 
 export function SolutionsPage() {
+  useForgeLive();
   useTitle("Solutions");
   const [status, setStatus] = useState("active");
   const [creating, setCreating] = useState(false);

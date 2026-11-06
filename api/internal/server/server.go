@@ -1,6 +1,7 @@
 package server
 
 import (
+	"os"
 	forgepkg "github.com/razorpay/slashdocs/api/internal/forge"
 	"context"
 	"errors"
@@ -219,6 +220,9 @@ func New(cfg Config, opts ...Option) *Server {
 			s.notificationWorker.ResolvePrincipal = deps.googleGroupResolver.Resolve
 		}
 	}
+	if deps.forge != nil && os.Getenv("FORGE_LOCAL_AUTH") == "true" {
+		deps.authenticator = localAuthenticator{base: deps.authenticator, store: deps.forge, resolve: deps.repository}
+	}
 	s.routes(deps)
 	return s
 }
@@ -263,6 +267,7 @@ func (s *Server) routes(deps dependencies) {
 
 	v1 := s.engine.Group("/v1")
 	v1.GET("/config", h.config)
+	h.registerLocalAccountPublic(v1)
 	// The /auth/google/* paths predate generic OIDC support and stay
 	// registered so existing Google redirect URIs, CLIs, and bookmarks keep
 	// working; /auth/oidc/* is the provider-neutral spelling.
@@ -364,6 +369,7 @@ func (s *Server) routes(deps dependencies) {
 	authed.POST("/forge/designs/:id/revise", h.forgeReviseDesign)
 	authed.GET("/forge/jobs/:id", h.forgeJobStatus)
 	h.registerForgeRoutes(authed)
+	h.registerLocalAccountAdmin(authed)
 }
 
 type handlers struct{ deps dependencies }

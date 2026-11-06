@@ -12,6 +12,7 @@ import {
   User as UserIcon,
   Wand2,
   Workflow,
+  Users,
   FileText,
 } from "lucide-react";
 import { Logo } from "./logo";
@@ -134,6 +135,9 @@ export function AccountMenu({ user }: { user: Principal }) {
           }}
         >
           <Rocket className="h-4 w-4" /> Setup guide
+        </DropdownItem>
+        <DropdownItem onSelect={() => nav("/app/settings/team")}>
+          <Users className="h-4 w-4" /> Team & invites
         </DropdownItem>
         <DropdownItem onSelect={() => nav("/app/settings/profile")}>
           <UserIcon className="h-4 w-4" /> Profile

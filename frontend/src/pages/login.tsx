@@ -10,11 +10,14 @@ import { publicURL } from "@/lib/config";
 import { useMe } from "@/lib/hooks";
 import { queryKeys } from "@/lib/queryKeys";
 import { useTitle } from "@/lib/use-title";
+import { accountsApi } from "@/lib/accounts";
+import { Input } from "@kalvi-education/katalyst/components/input";
 
 export function LoginPage() {
   useTitle("Sign in");
   const [params] = useSearchParams();
-  const next = params.get("next") || "/app/documents";
+  const next = params.get("next") || "/app/solutions";
+  const local = useQuery({ queryKey: ["local-auth"], queryFn: accountsApi.config, staleTime: Infinity });
   const me = useMe();
   const config = useQuery({
     queryKey: queryKeys.config(),
@@ -37,16 +40,22 @@ export function LoginPage() {
       <main className="flex flex-1 items-center justify-center px-6 py-16">
         <div className="glass-card enter w-full max-w-sm rounded-lg p-8 text-center">
           <h1 className="text-2xl font-normal tracking-[-0.02em]">
-            Sign in to slashdocs
+            Sign in to Forge
           </h1>
           <p className="mt-2 font-mono text-xs text-[var(--muted-foreground)]">
             {new URL(publicURL()).host}
           </p>
+          {local.data?.enabled && <LocalLoginForm next={next} />}
+          {local.data?.enabled && (
+            <div className="my-5 flex items-center gap-3 text-xs text-[var(--muted-foreground)]">
+              <span className="h-px flex-1 bg-[var(--border)]" /> or <span className="h-px flex-1 bg-[var(--border)]" />
+            </div>
+          )}
           <Button
             asChild
             variant="outline"
             size="lg"
-            className="mt-8 w-full aria-disabled:pointer-events-none aria-disabled:opacity-70"
+            className="w-full aria-disabled:pointer-events-none aria-disabled:opacity-70"
           >
             {/* nosemgrep: typescript.react.react-href-url.react-href-url - api.loginURL always returns a same-origin relative path and URL-encodes next as a query parameter. */}
             <a
@@ -73,6 +82,41 @@ export function LoginPage() {
       </main>
       <SiteFooter />
     </div>
+  );
+}
+
+function LocalLoginForm({ next }: { next: string }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <form
+      className="mt-8 flex flex-col gap-3 text-left"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setError("");
+        setBusy(true);
+        try {
+          await accountsApi.login(username, password);
+          // Discard all old identity-scoped queries, including consumed invites.
+          window.location.replace(next.startsWith("/") && !next.startsWith("//") ? next : "/app/solutions");
+        } catch {
+          setError("Wrong username or password.");
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <Input aria-label="Username" placeholder="Username" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+      <Input aria-label="Password" type="password" placeholder="Password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+      {error && <p className="text-sm text-[var(--destructive)]">{error}</p>}
+      <Button type="submit" size="lg" className="w-full" disabled={busy}>
+        {busy ? "Signing in…" : "Sign in"}
+      </Button>
+      <p className="text-center text-xs text-[var(--muted-foreground)]">No account? Ask an admin for an invite link.</p>
+    </form>
   );
 }
 

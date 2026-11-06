@@ -5,6 +5,8 @@ import { SolutionsPage } from "./pages/solutions";
 import { SolutionBoardPage } from "./pages/solution-board";
 import { DocEditorPage } from "./pages/doc-editor";
 import { WorkflowsPage } from "./pages/workflows";
+import { JoinPage, ResetPasswordPage } from "./pages/account-links";
+import { TeamAdminPage } from "./pages/team-admin";
 import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster, toast } from "sonner";
@@ -53,6 +55,8 @@ function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/join" element={<JoinPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/app" element={<AppShell />}>
                 <Route index element={<Navigate to="solutions" replace />} />
                 <Route path="start" element={<StartPage />} />
@@ -62,6 +66,7 @@ function App() {
                 <Route path="solutions/:key" element={<SolutionBoardPage />} />
                 <Route path="edit/:id" element={<DocEditorPage />} />
                 <Route path="settings/workflows" element={<WorkflowsPage />} />
+                <Route path="settings/team" element={<TeamAdminPage />} />
                 <Route path="d/:id" element={<DocumentPage />} />
                 <Route path="folders/:id" element={<FolderPage />} />
                 <Route

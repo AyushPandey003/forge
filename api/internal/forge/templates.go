@@ -210,7 +210,7 @@ func Template(key, solutionTitle string) string {
 func RenderMarkdownDoc(title, bodyHTML, markdown string) []byte {
 	var b strings.Builder
 	fmt.Fprintf(&b, `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-_Title_%s</title><meta name="forge:kind" content="markdown">
+<title>%s</title><meta name="forge:kind" content="markdown">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>%s</style></head><body><main class="doc">%s</main>
 <script type="text/markdown" id="forge-source">%s</script>

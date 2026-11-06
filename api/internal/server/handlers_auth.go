@@ -410,6 +410,12 @@ func (h handlers) revokeCLICredential(c *gin.Context) {
 // @Success 204
 // @Router /v1/auth/logout [post]
 func (h handlers) logout(c *gin.Context) {
+	if ck, err := c.Request.Cookie(localCookie); err == nil {
+		if h.deps.forge != nil {
+			_ = h.deps.forge.DeleteLocalSession(c.Request.Context(), ck.Value)
+		}
+		http.SetCookie(c.Writer, &http.Cookie{Name: localCookie, Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: secureCookiesForOrigin(h.deps.appOrigin), SameSite: http.SameSiteLaxMode})
+	}
 	h.writeSessionCookie(c, "", -1)
 	c.Status(http.StatusNoContent)
 }

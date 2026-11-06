@@ -19,6 +19,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@kalvi-education/katalyst/components/alert";
+import { MarkdownDraft } from "@/components/markdown-draft";
 import { useTitle } from "@/lib/use-title";
 import { queryKeys } from "@/lib/queryKeys";
 import { solutionKeys, solutionsApi } from "@/lib/solutions";
@@ -47,7 +48,7 @@ export function DocEditorPage() {
   // The editor normalises Markdown when it mounts; treat its first output as
   // the saved baseline so opening a doc doesn't mark it dirty.
   const [baseline, setBaseline] = useState<string | null>(null);
-  const mountedAt = useRef(0);
+  const normalised = useRef(false);
 
   useEffect(() => {
     if (source.data && !loaded.current) {
@@ -55,13 +56,16 @@ export function DocEditorPage() {
       setMarkdown(source.data.markdown);
       setBaseline(source.data.markdown);
       setBase(source.data.version_id);
-      mountedAt.current = Date.now();
+      normalised.current = false;
     }
   }, [source.data]);
 
   const dirty = markdown !== null && baseline !== null && markdown !== baseline;
   const onEdit = (md: string) => {
-    if (Date.now() - mountedAt.current < 800) setBaseline(md);
+    if (!normalised.current) {
+      normalised.current = true;
+      setBaseline(md);
+    }
     setMarkdown(md);
   };
 
@@ -200,6 +204,7 @@ export function DocEditorPage() {
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="mx-auto max-w-[860px] px-4 py-8">
           {markdown !== null && (
+            <MarkdownDraft value={markdown} onChange={(md) => { normalised.current = true; setMarkdown(md); }}>
             <MarkdownEditor
               value={markdown}
               onChange={onEdit}
@@ -208,6 +213,7 @@ export function DocEditorPage() {
               aria-label={source.data.title}
               contentClassName="min-h-[60vh]"
             />
+            </MarkdownDraft>
           )}
         </div>
       </div>

@@ -16,6 +16,7 @@ import (
 )
 
 func (h handlers) registerForgeRoutes(r *gin.RouterGroup) {
+	r.GET("/forge/live", h.forgeLive)
 	r.GET("/forge/meta", h.forgeMeta)
 	r.GET("/forge/workflows", h.forgeListWorkflows)
 	r.POST("/forge/workflows", h.forgeSaveWorkflow)

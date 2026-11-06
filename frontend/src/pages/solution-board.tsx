@@ -58,6 +58,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@kalvi-education/katalyst/components/tabs";
 import { Page } from "@/components/layout/page";
 import { Avatar } from "@/components/ui/misc";
+import { useForgeLive } from "@/lib/use-forge-live";
 import { useTitle } from "@/lib/use-title";
 import { cn } from "@/lib/cn";
 import { formatTimestamp } from "@/lib/format-date";
@@ -77,6 +78,7 @@ import {
 import { useMe } from "@/lib/hooks";
 
 export function SolutionBoardPage() {
+  useForgeLive();
   const { key = "" } = useParams();
   const [params, setParams] = useSearchParams();
   const board = useQuery({
