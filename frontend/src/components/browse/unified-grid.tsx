@@ -1,3 +1,4 @@
+import { DocumentLocation } from "./document-location";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { FileText, Folder as FolderIcon, Trash2 } from "lucide-react";
@@ -51,6 +52,8 @@ export function UnifiedGrid({
               canDelete={samePrincipal(me.data?.principal, e.document.owner)}
               pinned={pinnedIds?.has(docID(e.document))}
               snippet={e.document.snippet}
+              parentFolder={e.document.parent_folder}
+              parentFolderId={e.document.parent_folder_id}
             />
           );
         }
@@ -68,6 +71,8 @@ function DraggableEntryCard({
   canDelete,
   pinned,
   snippet,
+  parentFolder,
+  parentFolderId,
 }: {
   type: ResourceType;
   id: string;
@@ -76,6 +81,8 @@ function DraggableEntryCard({
   canDelete: boolean;
   pinned?: boolean;
   snippet?: string;
+  parentFolder?: { id: string; title: string };
+  parentFolderId?: string;
 }) {
   const isFolder = type === "folder";
   const {
@@ -130,6 +137,14 @@ function DraggableEntryCard({
           </span>
         </span>
       </Link>
+      {!isFolder && (
+        <div className="px-4 pb-3" onPointerDown={(event) => event.stopPropagation()}>
+          <DocumentLocation
+            parentFolder={parentFolder}
+            parentFolderId={parentFolderId}
+          />
+        </div>
+      )}
       <GridCardActions
         resourceType={type}
         resourceId={id}

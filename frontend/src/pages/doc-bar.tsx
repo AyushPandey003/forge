@@ -1,3 +1,5 @@
+import { MoveDocumentDialog } from "@/components/browse/move-document-dialog";
+import { RelationshipMap } from "@/components/browse/relationship-map";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -164,6 +166,21 @@ export function DocBar({
           <ArrowUpToLine className="h-4 w-4" />
         </Button>
       ) : null}
+      {!signIn && (
+        <RelationshipMap
+          key={docId}
+          folderId={parentFolder?.id}
+          document={{ id: docId, title }}
+        />
+      )}
+      {!signIn && canEdit && (
+        <MoveDocumentDialog
+          key={`move-${docId}`}
+          documentId={docId}
+          title={title}
+          parentFolder={parentFolder}
+        />
+      )}
       {!signIn && <DocSolutionChip docId={docId} canEdit={canEdit} />}
       {!signIn && <ForgeDocActions docId={docId} canEdit={canEdit} />}
       <VersionHistoryDialog
@@ -518,9 +535,7 @@ function VersionHistoryDialog({
                 type="button"
                 onClick={() => select(v.id)}
                 className={`flex w-full gap-3 rounded-xl border border-[var(--border)] p-4 text-left transition-colors hover:bg-[var(--muted)]/60 ${
-                  v.id === current
-                    ? "bg-[var(--accent)]/35"
-                    : "bg-[var(--card)]"
+                  v.id === current ? "bg-[var(--accent)]/35" : "bg-[var(--card)]"
                 }`}
                 aria-current={v.id === current ? "true" : undefined}
               >

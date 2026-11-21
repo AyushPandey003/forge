@@ -4,7 +4,16 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Monitor, Smartphone, Tablet, Wand2, FileText, ArrowRight } from "lucide-react";
+import {
+  Monitor,
+  Smartphone,
+  Tablet,
+  Wand2,
+  FileText,
+  ArrowRight,
+  KeyRound,
+  Settings2,
+} from "lucide-react";
 import { Button } from "@kalvi-education/katalyst/components/button";
 import { Textarea } from "@kalvi-education/katalyst/components/textarea";
 import { Input } from "@kalvi-education/katalyst/components/input";
@@ -16,7 +25,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@kalvi-education/katalyst/components/card";
-import { Alert, AlertDescription, AlertTitle } from "@kalvi-education/katalyst/components/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@kalvi-education/katalyst/components/alert";
 import { Spinner } from "@kalvi-education/katalyst/components/spinner";
 import {
   ToggleGroup,
@@ -34,6 +47,10 @@ import { useTitle } from "@/lib/use-title";
 import { api, docID, docTitle } from "@/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { forgeApi, useForgeJob, type DeviceType } from "@/lib/forge";
+import { ProvidersDialog } from "./design-providers";
+import { DesignThemePicker } from "./design-theme-picker";
+import { DesignPreview } from "./design-preview";
+import { Switch } from "@kalvi-education/katalyst/components/switch";
 import { solutionsApi } from "@/lib/solutions";
 
 const STARTERS = [
@@ -44,6 +61,28 @@ const STARTERS = [
 ];
 
 const NO_SPEC = "__none__";
+const STITCH = "__stitch__";
+const ENGINE_KEY = "forge.design.engine";
+
+function readEngine(): { provider: string; model: string } {
+  try {
+    const v = JSON.parse(localStorage.getItem(ENGINE_KEY) || "{}");
+    return {
+      provider: typeof v.provider === "string" ? v.provider : "",
+      model: typeof v.model === "string" ? v.model : "",
+    };
+  } catch {
+    return { provider: "", model: "" };
+  }
+}
+
+function saveEngine(provider: string, model: string) {
+  try {
+    localStorage.setItem(ENGINE_KEY, JSON.stringify({ provider, model }));
+  } catch {
+    /* storage unavailable: the choice just will not persist */
+  }
+}
 
 export function DesignStudioPage() {
   useTitle("Design studio");
@@ -63,6 +102,30 @@ export function DesignStudioPage() {
   });
 
   const status = useQuery({ queryKey: ["forge", "status"], queryFn: forgeApi.status });
+  const providers = useQuery({
+    queryKey: queryKeys.forgeProviders(),
+    queryFn: forgeApi.providers,
+    enabled: !!status.data?.custom_models,
+  });
+  const saved = useMemo(readEngine, []);
+  const [engine, setEngine] = useState<string>(saved.provider);
+  const [model, setModel] = useState<string>(saved.model);
+  const [theme, setTheme] = useState<string>("");
+  const [oneScreen, setOneScreen] = useState(false);
+  const [providersOpen, setProvidersOpen] = useState(false);
+  const providerList = providers.data?.items;
+  // A saved choice can point at a provider that was deleted since.
+  const activeProvider = providerList?.find((p) => p.id === engine);
+  const effectiveModel = activeProvider
+    ? model.trim() || activeProvider.default_model
+    : "";
+  function chooseEngine(id: string) {
+    const next = id === STITCH ? "" : id;
+    const p = providerList?.find((x) => x.id === next);
+    setEngine(next);
+    setModel(p?.default_model ?? "");
+    saveEngine(next, p?.default_model ?? "");
+  }
   const docs = useQuery({
     queryKey: [...queryKeys.documents(), ""],
     queryFn: () => api.listDocuments(),
@@ -78,8 +141,9 @@ export function DesignStudioPage() {
     }
   });
 
+  const engineReady = activeProvider ? effectiveModel !== "" : !!status.data?.enabled;
   const canGenerate =
-    status.data?.enabled &&
+    engineReady &&
     !running &&
     (prompt.trim().length > 0 || specId !== NO_SPEC || !!solutionId);
 
@@ -95,6 +159,14 @@ export function DesignStudioPage() {
         source_doc_id: specId !== NO_SPEC ? specId : undefined,
         solution_id: solutionId,
         stage: solutionStage,
+        ...(activeProvider
+          ? {
+              provider_id: activeProvider.id,
+              model: effectiveModel,
+              theme: theme || undefined,
+              one_screen: oneScreen || undefined,
+            }
+          : {}),
       }),
     );
   }
@@ -103,14 +175,25 @@ export function DesignStudioPage() {
     <Page lane="focus">
       <header className="enter mb-8">
         <div className="mb-3 flex items-center gap-2">
-          <Badge variant="outline">Stitch</Badge>
-          <Badge variant="secondary">{status.data?.design_system || "Katalyst"}</Badge>
+          {activeProvider ? (
+            <>
+              <Badge variant="outline">{activeProvider.label}</Badge>
+              <Badge variant="secondary">{effectiveModel || "Choose a model"}</Badge>
+            </>
+          ) : (
+            <>
+              <Badge variant="outline">Stitch</Badge>
+              <Badge variant="secondary">
+                {status.data?.design_system || "Katalyst"}
+              </Badge>
+            </>
+          )}
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">Design studio</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Describe a screen or start from a spec. Forge generates it with Google Stitch,
-          constrained by the Katalyst design system, and publishes it for your team to
-          review.
+          Describe a screen or start from a spec. Generate with Google Stitch under the
+          Katalyst design system, or bring your own model and API key. Every design is
+          published for your team to review.
         </p>
       </header>
 
@@ -122,25 +205,84 @@ export function DesignStudioPage() {
           <AlertDescription>
             The design is added to this solution's UX designs. Leave the prompt empty to
             design from its PRD.{" "}
-            <Link className="underline" to={`/app/solutions/${board.data.solution.key}`}>
+            <Link
+              className="underline"
+              to={`/app/solutions/${board.data.solution.key}`}
+            >
               Back to solution
             </Link>
           </AlertDescription>
         </Alert>
       )}
 
-      {status.data && !status.data.enabled && (
+      {status.data && !status.data.enabled && !activeProvider && (
         <Alert className="mb-6">
-          <AlertTitle>Stitch is not configured</AlertTitle>
+          <AlertTitle>No design engine is ready</AlertTitle>
           <AlertDescription>
-            Set <code>STITCH_API_KEY</code> (or <code>STITCH_USE_GCLOUD=true</code>) on the
-            server to enable design generation.
+            Connect your own model provider to start designing now. (Stitch is not
+            configured on this server; an admin can set <code>STITCH_API_KEY</code>.)
+            {status.data.custom_models && (
+              <div className="mt-3">
+                <Button size="sm" onClick={() => setProvidersOpen(true)}>
+                  <KeyRound /> Connect a provider
+                </Button>
+              </div>
+            )}
           </AlertDescription>
         </Alert>
       )}
 
       <Card className="enter">
         <CardContent className="flex flex-col gap-5">
+          {status.data?.custom_models && (
+            <div className="grid gap-4 rounded-lg border bg-muted/30 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium">Design engine</span>
+                <Select
+                  value={activeProvider ? engine : STITCH}
+                  onValueChange={chooseEngine}
+                  disabled={running}
+                >
+                  <SelectTrigger className="w-full" aria-label="Design engine">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={STITCH} disabled={!status.data.enabled}>
+                      Stitch + Katalyst{status.data.enabled ? "" : " (not configured)"}
+                    </SelectItem>
+                    {(providerList || []).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {activeProvider ? (
+                <ModelField
+                  providerId={activeProvider.id}
+                  value={model}
+                  fallback={activeProvider.default_model}
+                  disabled={running}
+                  onChange={(m) => {
+                    setModel(m);
+                    saveEngine(engine, m);
+                  }}
+                />
+              ) : (
+                <p className="text-xs text-muted-foreground sm:pb-2">
+                  Uses the Google Stitch connection configured on the server.
+                </p>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => setProvidersOpen(true)}
+                disabled={running}
+              >
+                <Settings2 /> Providers
+              </Button>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <label htmlFor="forge-prompt" className="text-sm font-medium">
               What should we design?
@@ -153,7 +295,8 @@ export function DesignStudioPage() {
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="A dashboard for tracking spec reviews: a table of specs with owners and status, and a panel of open comments…"
               onKeyDown={(e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && canGenerate) generate();
+                if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && canGenerate)
+                  generate();
               }}
             />
           </div>
@@ -177,17 +320,35 @@ export function DesignStudioPage() {
             </div>
             <div className="flex flex-col gap-2">
               <label htmlFor="forge-title" className="text-sm font-medium">
-                Title <span className="font-normal text-muted-foreground">(optional)</span>
+                Title{" "}
+                <span className="font-normal text-muted-foreground">(optional)</span>
               </label>
               <Input
                 id="forge-title"
                 value={title}
                 disabled={running}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Named by Stitch if empty"
+                placeholder={activeProvider ? "Named by the model if empty" : "Named by Stitch if empty"}
               />
             </div>
           </div>
+
+          {activeProvider && (
+            <div className="flex flex-col gap-3">
+              <DesignThemePicker value={theme} onChange={setTheme} disabled={running} />
+              <label className="flex items-center gap-2 text-sm">
+                <Switch
+                  checked={oneScreen}
+                  onCheckedChange={setOneScreen}
+                  disabled={running}
+                />
+                Single screen only
+                <span className="text-xs text-muted-foreground">
+                  (otherwise the model plans up to 4 connected screens)
+                </span>
+              </label>
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <ToggleGroup
@@ -234,7 +395,9 @@ export function DesignStudioPage() {
 
       {!job && (
         <section className="mt-10">
-          <h2 className="mb-3 text-sm font-medium text-muted-foreground">Try a starter</h2>
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">
+            Try a starter
+          </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {STARTERS.map((s) => (
               <button
@@ -251,14 +414,69 @@ export function DesignStudioPage() {
       )}
 
       <p className="mt-10 text-xs text-muted-foreground">
-        Designs are published as documents labelled <code>design</code>. Comment on them,
-        then use <span className="font-medium text-foreground">Revise with Stitch</span> on
-        the document to apply the feedback as a new version.{" "}
+        Designs are published as documents labelled <code>design</code>. Comment on
+        them, then use{" "}
+        <span className="font-medium text-foreground">Revise with Stitch</span> on the
+        document to apply the feedback as a new version.{" "}
         <Link to="/app/documents" className="underline underline-offset-4">
           Back to documents
         </Link>
       </p>
+      <ProvidersDialog
+        open={providersOpen}
+        onOpenChange={setProvidersOpen}
+        onSaved={(p) => {
+          setEngine(p.id);
+          setModel(p.default_model);
+          saveEngine(p.id, p.default_model);
+        }}
+      />
     </Page>
+  );
+}
+
+function ModelField({
+  providerId,
+  value,
+  fallback,
+  disabled,
+  onChange,
+}: {
+  providerId: string;
+  value: string;
+  fallback: string;
+  disabled: boolean;
+  onChange: (m: string) => void;
+}) {
+  const models = useQuery({
+    queryKey: ["forge", "ai", "models", providerId],
+    queryFn: () => forgeApi.models(providerId),
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  const list = models.data?.models || [];
+  const listId = `models-${providerId}`;
+  return (
+    <div className="flex flex-col gap-2">
+      <label htmlFor="forge-model" className="text-sm font-medium">
+        Model
+      </label>
+      <Input
+        id="forge-model"
+        list={listId}
+        value={value}
+        disabled={disabled}
+        placeholder={fallback || "Type a model name"}
+        onChange={(e) => onChange(e.target.value)}
+        autoComplete="off"
+        spellCheck={false}
+      />
+      <datalist id={listId}>
+        {list.slice(0, 300).map((m) => (
+          <option key={m} value={m} />
+        ))}
+      </datalist>
+    </div>
   );
 }
 
@@ -296,7 +514,9 @@ function JobPanel({
       <Card>
         <CardHeader>
           <CardTitle>Stitch has a question</CardTitle>
-          <CardDescription className="whitespace-pre-wrap">{job.question}</CardDescription>
+          <CardDescription className="whitespace-pre-wrap">
+            {job.question}
+          </CardDescription>
         </CardHeader>
         {!!job.suggestions?.length && (
           <CardContent className="flex flex-wrap gap-2">
@@ -319,13 +539,16 @@ function JobPanel({
             It's a document now: share it, comment on it, and revise it.
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex gap-2">
-          <Button onClick={() => onOpen(job.document_id!)}>
-            <FileText /> Open design <ArrowRight />
-          </Button>
-          <Button variant="outline" onClick={onReset}>
-            Generate another
-          </Button>
+        <CardContent className="flex flex-col gap-4">
+          <DesignPreview docId={job.document_id} versionId={job.version_id} />
+          <div className="flex gap-2">
+            <Button onClick={() => onOpen(job.document_id!)}>
+              <FileText /> Open design <ArrowRight />
+            </Button>
+            <Button variant="outline" onClick={onReset}>
+              Generate another
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );

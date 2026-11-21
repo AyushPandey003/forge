@@ -54,6 +54,8 @@ services:
       STITCH_PROJECT: forge-stitch-261104
       # Local accounts: invite links + username/password (dev only).
       FORGE_LOCAL_AUTH: "true"
+      # Dev only: lets "Bring your own model" reach local servers (Ollama, LM Studio).
+      FORGE_AI_ALLOW_PRIVATE_URLS: "true"
       FORGE_LOCAL_ADMIN_EMAIL: admin@example.com
       FORGE_DESIGN_MD: /src/design/katalyst.DESIGN.md
       FORGE_STITCH_PROJECT_ID: "3828330232627373588"

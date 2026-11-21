@@ -78,13 +78,20 @@ export function RenderFrame() {
       ...comments
         // Match the sidebar filter so resolved threads can also be positioned
         // beside their text when browsing All or Resolved.
-        .filter((c) => matchesCommentFilter(c.status, commentFilter))
+        .filter(
+          (c) =>
+            matchesCommentFilter(c.status, commentFilter) &&
+            (c.selected_text || c.anchor?.quote) !== "Design feedback",
+        )
         .map((c) => ({
           id: c.id,
           quote: c.selected_text || c.anchor?.quote,
           anchor: c.anchor,
+          author: c.author.name || c.author.email || "Commenter",
         })),
-      ...drafts.map(({ id, quote, anchor }) => ({ id, quote, anchor })),
+      ...drafts
+        .filter((d) => d.quote !== "Design feedback")
+        .map(({ id, quote, anchor }) => ({ id, quote, anchor })),
     ],
     [comments, commentFilter, drafts],
   );

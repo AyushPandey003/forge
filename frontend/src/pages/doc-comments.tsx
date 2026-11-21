@@ -67,6 +67,7 @@ import {
 import { NotificationToggle } from "@/components/notification-toggle";
 import type { CommentDraft } from "@/lib/comment-drafts";
 import { useDoc } from "./doc-context";
+import { isDesignFeedback } from "@/lib/design-feedback";
 import { ReactionBar } from "./doc-comment-reactions";
 
 function submitOnModEnter(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -407,6 +408,7 @@ function CommentText({ text }: { text: string }) {
 export function Comments({ mobile = false }: { mobile?: boolean }) {
   const {
     docId,
+    signIn,
     comments,
     commentsLoading,
     commentsError,
@@ -419,6 +421,7 @@ export function Comments({ mobile = false }: { mobile?: boolean }) {
   } = useDoc();
   const headerRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
+  const [composeOpen, setComposeOpen] = useState(false);
 
   useLayoutEffect(() => {
     const header = headerRef.current;
@@ -493,6 +496,21 @@ export function Comments({ mobile = false }: { mobile?: boolean }) {
           ))}
         </div>
       </div>
+      <div className="border-b border-[var(--border)] p-3">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          aria-expanded={composeOpen}
+          onClick={() => (signIn ? signIn() : setComposeOpen(true))}
+        >
+          <MessageSquareText className="mr-2 h-4 w-4" /> Add comment
+        </Button>
+        <p className="mt-2 text-xs text-[var(--muted-foreground)]">
+          Comment on the design here. Include a screen name to make feedback specific.
+        </p>
+      </div>
+      {composeOpen && <GeneralCommentComposer onClose={() => setComposeOpen(false)} />}
       {mobile ? (
         <div
           data-comment-scroll
@@ -523,6 +541,66 @@ export function Comments({ mobile = false }: { mobile?: boolean }) {
   );
 }
 
+function GeneralCommentComposer({ onClose }: { onClose: () => void }) {
+  const { docId, version, setCommentFilter } = useDoc();
+  const qc = useQueryClient();
+  const [body, setBody] = useState("");
+  const create = useMutation({
+    mutationFn: () => api.createComment(docId, version, body.trim(), "Design feedback"),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.comments(docId) });
+      setCommentFilter(COMMENT_STATUS.open);
+      toast.success("Comment added.");
+      onClose();
+    },
+    onError: (e) => toast.error(errorMessage(e, "Could not add comment")),
+  });
+  return (
+    <form
+      className="shrink-0 border-b border-[var(--border)] p-3 space-y-3"
+      aria-label="New design comment"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (body.trim() && !create.isPending) create.mutate();
+      }}
+    >
+      <label htmlFor="general-design-comment" className="text-sm font-medium">
+        Your comment
+      </label>
+      <Textarea
+        id="general-design-comment"
+        aria-label="Your comment"
+        autoFocus
+        rows={3}
+        placeholder="What should change? Include a screen name if useful…"
+        value={body}
+        disabled={create.isPending}
+        onChange={(e) => setBody(e.target.value)}
+      />
+      {create.isError && (
+        <p role="alert" className="text-xs text-[var(--destructive)]">
+          {errorMessage(create.error, "Could not add comment")}
+        </p>
+      )}
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={create.isPending}
+          onClick={onClose}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" size="sm" disabled={!body.trim() || create.isPending}>
+          <Send className="mr-2 h-4 w-4" />
+          {create.isPending ? "Posting…" : "Post comment"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 function CommentsEmptyState({ filter }: { filter: CommentFilter }) {
   return (
     <EmptyState
@@ -537,7 +615,7 @@ function CommentsEmptyState({ filter }: { filter: CommentFilter }) {
       description={
         filter === COMMENT_STATUS.resolved
           ? "Resolved conversations will appear here."
-          : "Select text in the document to start a thread."
+          : "Click Add comment above to start a conversation."
       }
     />
   );
@@ -614,20 +692,22 @@ function CommentComposer({ draft }: { draft: CommentDraft }) {
       onFocusCapture={() => setActiveComment(draft.id)}
       className={cn(
         "space-y-2 rounded-md bg-[var(--card)] p-3 shadow-lg ring-1",
-        active
-          ? "ring-2 ring-[var(--input)]"
-          : "ring-[var(--border)]",
+        active ? "ring-2 ring-[var(--input)]" : "ring-[var(--border)]",
       )}
       onSubmit={(event) => {
         event.preventDefault();
         if (text.body.trim() && !create.isPending) create.mutate();
       }}
     >
-      {unanchoredComments.has(draft.id) && (
+      {!isDesignFeedback(quote) && unanchoredComments.has(draft.id) && (
         <Badge variant="warning">Text not found in this version</Badge>
       )}
       <div className="border-l-2 border-[var(--primary)] pl-2 text-xs italic text-[var(--muted-foreground)]">
-        “{quote.length > 80 ? quote.slice(0, 80) + "…" : quote}”
+        {isDesignFeedback(quote)
+          ? quote.startsWith("[Screen: ")
+            ? quote
+            : "General design comment"
+          : `“${quote.length > 80 ? quote.slice(0, 80) + "…" : quote}”`}
       </div>
       <MentionTextarea
         rows={3}
@@ -1085,12 +1165,20 @@ function CommentCard({
           ) : null}
         </div>
       )}
-      {unanchoredComments.has(c.id) && (
-        <Badge variant="warning" className="mb-2">
-          Highlight not currently visible
+      {!isDesignFeedback(c.selected_text || c.anchor?.quote) &&
+        unanchoredComments.has(c.id) && (
+          <Badge variant="warning" className="mb-2">
+            Highlight not currently visible
+          </Badge>
+        )}
+      {isDesignFeedback(c.selected_text || c.anchor?.quote) && (
+        <Badge variant="accent" className="mb-2">
+          {c.selected_text?.startsWith("[Screen: ")
+            ? "Screen annotation"
+            : "General design comment"}
         </Badge>
       )}
-      {c.selected_text && (
+      {c.selected_text && c.selected_text !== "Design feedback" && (
         <blockquote className="mb-2 rounded-r-md border-l-2 border-[var(--input)] bg-[var(--muted)] py-1.5 pl-2 pr-2 text-xs leading-relaxed break-words text-[var(--muted-foreground)]">
           {c.selected_text}
         </blockquote>
@@ -1209,7 +1297,9 @@ function EditableComment({
     return (
       <div>
         <CommentBody text={c.body} mentions={c.mentions} />
-        {c.edited && <div className="text-xs text-[var(--muted-foreground)]">edited</div>}
+        {c.edited && (
+          <div className="text-xs text-[var(--muted-foreground)]">edited</div>
+        )}
       </div>
     );
   return <CommentEditForm c={c} docId={docId} setEditing={setEditing} />;

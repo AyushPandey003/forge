@@ -1,0 +1,115 @@
+{
+ "base": "--font-sans: \"Plus Jakarta Sans\";\n  --font-heading: \"Space Grotesk\";\n  --font-serif: \"Playfair Display\";\n  --font-mono: \"JetBrains Mono\";\n\n  --shadow-2xs: 0 0 #0000;\n  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);\n  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);\n  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);\n  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);\n\n  --tracking-tighter: -0.05em;\n  --tracking-tight: -0.025em;\n  --tracking-normal: 0em;\n  --tracking-wide: 0.025em;\n  --tracking-wider: 0.05em;\n  --tracking-widest: 0.1em;",
+ "themes": [
+  {
+   "id": "ocean-breeze",
+   "name": "Ocean Breeze",
+   "css": "--background: #fff;\n  --foreground: #111827;\n  --card: #ffffff;\n  --card-foreground: #111827;\n  --popover: #ffffff;\n  --popover-foreground: #111827;\n  --primary: #3b82f6;\n  --primary-rgb: 59, 130, 246;\n  --primary-foreground: #ffffff;\n  --secondary: #e5e7eb;\n  --secondary-foreground: #1f2937;\n  --accent: #dbeafe;\n  --accent-foreground: #1e293b;\n  --muted: #f3f4f6;\n  --muted-foreground: #6b7280;\n  --destructive: #ef4444;\n  --border: #e5e7eb;\n  --input: #e5e7eb;\n  --ring: #3b82f6;\n  --radius: 0.75rem;\n  --chart-1: #3b82f6;\n  --chart-2: #10b981;\n  --chart-3: #f59e0b;\n  --chart-4: #8b5cf6;\n  --chart-5: #ec4899;"
+  },
+  {
+   "id": "netflix",
+   "name": "Netflix",
+   "css": "--background: #141414;\n  --foreground: #ffffff;\n  --card: #1f1f1f;\n  --card-foreground: #ffffff;\n  --popover: #1f1f1f;\n  --popover-foreground: #ffffff;\n  --primary: #e50914;\n  --primary-rgb: 229, 9, 20;\n  --primary-foreground: #ffffff;\n  --secondary: #2d2d2d;\n  --secondary-foreground: #ffffff;\n  --accent: #e50914;\n  --accent-foreground: #ffffff;\n  --muted: #2d2d2d;\n  --muted-foreground: #a3a3a3;\n  --destructive: #dc2626;\n  --border: #3d3d3d;\n  --input: #3d3d3d;\n  --ring: #e50914;\n  --radius: 0.25rem;\n  --chart-1: #e50914;\n  --chart-2: #b81d24;\n  --chart-3: #ff6b6b;\n  --chart-4: #ffffff;\n  --chart-5: #a3a3a3;"
+  },
+  {
+   "id": "acid-lime",
+   "name": "Acid Lime",
+   "css": "--background: #09090b;\n  --foreground: #fafafa;\n  --card: #18181b;\n  --card-foreground: #fafafa;\n  --popover: #18181b;\n  --popover-foreground: #fafafa;\n  --primary: #d9f99d;\n  --primary-rgb: 217, 249, 157;\n  --primary-foreground: #1a2e05;\n  --secondary: #27272a;\n  --secondary-foreground: #fafafa;\n  --muted: #27272a;\n  --muted-foreground: #a1a1aa;\n  --accent: #27272a;\n  --accent-foreground: #fafafa;\n  --destructive: #ef4444;\n  --border: #27272a;\n  --input: #27272a;\n  --ring: #d9f99d;\n  --radius: 1.0rem;\n  --chart-1: #d9f99d;\n  --chart-2: #22d3ee;\n  --chart-3: #f472b6;\n  --chart-4: #a78bfa;\n  --chart-5: #fb923c;"
+  },
+  {
+   "id": "purple-yellow",
+   "name": "Purple & Yellow",
+   "css": "--background: #fdf6ff;\n  --foreground: #1f1f2e;\n  --primary: #8e44ad;\n  --primary-rgb: 142,68,173;\n  --primary-foreground: #ffffff;\n  --secondary: #f5f5f5;\n  --secondary-foreground: #1f1f2e;\n  --muted: #ede7f6;\n  --muted-foreground: #6b5b95;\n  --accent: #f1c40f;\n  --accent-foreground: #1f1f2e;\n  --destructive: #e74c3c;\n  --card: #ffffff;\n  --card-foreground: #1f1f2e;\n  --popover: #ffffff;\n  --popover-foreground: #1f1f2e;\n  --border: #dcdcdc;\n  --input: #ffffff;\n  --ring: #8e44ad;\n  --chart-1: #8e44ad;\n  --chart-2: #f1c40f;\n  --chart-3: #9b59b6;\n  --chart-4: #f39c12;\n  --chart-5: #d35400;"
+  },
+  {
+   "id": "green-lime",
+   "name": "Green & Lime",
+   "css": "--background: #f0fff4;\n  --foreground: #1a1a1a;\n  --primary: #00c853;\n  --primary-rgb: 0,200,83;\n  --primary-foreground: #ffffff;\n  --secondary: #e6f9e8;\n  --secondary-foreground: #1a1a1a;\n  --muted: #b2f2bb;\n  --muted-foreground: #006622;\n  --accent: #76ff03;\n  --accent-foreground: #1a1a1a;\n  --card: #ffffff;\n  --card-foreground: #1a1a1a;\n  --border: #d9f2d9;\n  --ring: #00c853;\n  --chart-1: #00c853;\n  --chart-2: #76ff03;\n  --chart-3: #b2f2bb;\n  --chart-4: #009933;\n  --chart-5: #1a1a1a;"
+  },
+  {
+   "id": "teal-coral",
+   "name": "Teal & Coral",
+   "css": "--background: #f0fdfa;\n  --foreground: #0f172a;\n  --primary: #00bcd4;\n  --primary-rgb: 0,188,212;\n  --primary-foreground: #ffffff;\n  --secondary: #e0f7fa;\n  --secondary-foreground: #0f172a;\n  --muted: #b2ebf2;\n  --muted-foreground: #006064;\n  --accent: #ff6f61;\n  --accent-foreground: #ffffff;\n  --destructive: #ff3d00;\n  --card: #ffffff;\n  --card-foreground: #0f172a;\n  --popover: #ffffff;\n  --popover-foreground: #0f172a;\n  --border: #cfd8dc;\n  --input: #ffffff;\n  --ring: #00bcd4;\n  --chart-1: #00bcd4;\n  --chart-2: #ff6f61;\n  --chart-3: #009688;\n  --chart-4: #ffc107;\n  --chart-5: #e91e63;"
+  },
+  {
+   "id": "lilac-teal",
+   "name": "Lilac & Teal",
+   "css": "--background: #f9f5ff;\n  --foreground: #1a1a1a;\n  --primary: #9c27b0;\n  --primary-rgb: 156,39,176;\n  --primary-foreground: #ffffff;\n  --secondary: #f3e5f5;\n  --secondary-foreground: #1a1a1a;\n  --muted: #e1bee7;\n  --muted-foreground: #6a1b9a;\n  --accent: #00bfa5;\n  --accent-foreground: #ffffff;\n  --card: #ffffff;\n  --card-foreground: #1a1a1a;\n  --border: #e0d7eb;\n  --ring: #9c27b0;\n  --chart-1: #9c27b0;\n  --chart-2: #00bfa5;\n  --chart-3: #e1bee7;\n  --chart-4: #6a1b9a;\n  --chart-5: #1a1a1a;"
+  },
+  {
+   "id": "orange-gray",
+   "name": "Orange & Gray",
+   "css": "--background: #fff7f0;\n  --foreground: #3a3a3a;\n  --primary: #ff6600;\n  --primary-rgb: 255,102,0;\n  --primary-foreground: #ffffff;\n  --secondary: #f5f5f5;\n  --secondary-foreground: #3a3a3a;\n  --muted: #ffe5cc;\n  --muted-foreground: #7a5a3a;\n  --accent: #ff9900;\n  --accent-foreground: #ffffff;\n  --card: #ffffff;\n  --card-foreground: #3a3a3a;\n  --border: #e0e0e0;\n  --ring: #ff6600;\n  --chart-1: #ff6600;\n  --chart-2: #ff9900;\n  --chart-3: #ffe5cc;\n  --chart-4: #d94f00;\n  --chart-5: #7a5a3a;"
+  },
+  {
+   "id": "neo-brutalism",
+   "name": "Neo-Brutalism",
+   "css": "--background: #1a1a1a;\n  --foreground: #ffffff;\n  --primary: #ff6f61;\n  --primary-rgb: 255,111,97;\n  --primary-foreground: #ffffff;\n  --secondary: #2d2d2d;\n  --secondary-foreground: #ffffff;\n  --muted: #3d3d3d;\n  --muted-foreground: #bbbbbb;\n  --accent: #f0c674;\n  --accent-foreground: #1a1a1a;\n  --card: #2d2d2d;\n  --card-foreground: #ffffff;\n  --border: #3d3d3d;\n  --ring: #ff6f61;\n  --chart-1: #ff6f61;\n  --chart-2: #f0c674;\n  --chart-3: #2d2d2d;\n  --chart-4: #555555;\n  --chart-5: #bbbbbb;"
+  },
+  {
+   "id": "glassmorphism",
+   "name": "Glassmorphism",
+   "css": "--background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\n  --foreground: #ffffff;\n  --primary: rgba(255, 255, 255, 0.9);\n  --primary-rgb: 255,255,255;\n  --primary-foreground: #667eea;\n  --secondary: rgba(255, 255, 255, 0.1);\n  --secondary-foreground: #ffffff;\n  --muted: rgba(255, 255, 255, 0.05);\n  --muted-foreground: rgba(255, 255, 255, 0.7);\n  --accent: #00ffff;\n  --accent-foreground: #000000;\n  --destructive: #ff4757;\n  --card: rgba(255, 255, 255, 0.15);\n  --card-foreground: #ffffff;\n  --popover: rgba(255, 255, 255, 0.2);\n  --popover-foreground: #ffffff;\n  --border: rgba(255, 255, 255, 0.2);\n  --input: rgba(255, 255, 255, 0.1);\n  --ring: rgba(255, 255, 255, 0.5);\n  --chart-1: #00ffff;\n  --chart-2: #66ffff;\n  --chart-3: #ccffff;\n  --chart-4: #99ffff;\n  --chart-5: #33ffff;"
+  },
+  {
+   "id": "swiss-style",
+   "name": "Swiss Style",
+   "css": "--background: #f5f5f5;\n  --foreground: #111111;\n  --primary: #e30613;\n  --primary-rgb: 227,6,19;\n  --primary-foreground: #ffffff;\n  --secondary: #ffffff;\n  --secondary-foreground: #111111;\n  --muted: #e0e0e0;\n  --muted-foreground: #333333;\n  --accent: #000000;\n  --accent-foreground: #ffffff;\n  --card: #ffffff;\n  --card-foreground: #111111;\n  --border: #cccccc;\n  --ring: #e30613;\n  --chart-1: #e30613;\n  --chart-2: #111111;\n  --chart-3: #e0e0e0;\n  --chart-4: #ffffff;\n  --chart-5: #555555;"
+  },
+  {
+   "id": "sunset",
+   "name": "Sunset",
+   "css": "--background: #fff7ed;\n  --foreground: #7c2d12;\n  --primary: #f59e0b;\n  --primary-rgb: 245,158,11;\n  --primary-foreground: #ffffff;\n  --secondary: #fef3c7;\n  --secondary-foreground: #7c2d12;\n  --muted: #fed7aa;\n  --muted-foreground: #92400e;\n  --accent: #ef4444;\n  --accent-foreground: #ffffff;\n  --destructive: #dc2626;\n  --card: #ffffff;\n  --card-foreground: #7c2d12;\n  --popover: #ffffff;\n  --popover-foreground: #7c2d12;\n  --border: #fed7aa;\n  --input: #ffffff;\n  --ring: #f59e0b;\n  --chart-1: #f59e0b;\n  --chart-2: #ef4444;\n  --chart-3: #ec4899;\n  --chart-4: #fb923c;\n  --chart-5: #fbbf24;"
+  },
+  {
+   "id": "ocean",
+   "name": "Ocean",
+   "css": "--background: #f0f9ff;\n  --foreground: #0c4a6e;\n  --primary: #0ea5e9;\n  --primary-rgb: 14,165,233;\n  --primary-foreground: #ffffff;\n  --secondary: #e0f2fe;\n  --secondary-foreground: #0c4a6e;\n  --muted: #bae6fd;\n  --muted-foreground: #075985;\n  --accent: #06b6d4;\n  --accent-foreground: #ffffff;\n  --destructive: #dc2626;\n  --card: #ffffff;\n  --card-foreground: #0c4a6e;\n  --popover: #ffffff;\n  --popover-foreground: #0c4a6e;\n  --border: #bae6fd;\n  --input: #ffffff;\n  --ring: #0ea5e9;\n  --chart-1: #0ea5e9;\n  --chart-2: #06b6d4;\n  --chart-3: #3b82f6;\n  --chart-4: #0284c7;\n  --chart-5: #7dd3fc;"
+  },
+  {
+   "id": "forest",
+   "name": "Forest",
+   "css": "--background: #f0fdf4;\n  --foreground: #14532d;\n  --primary: #10b981;\n  --primary-rgb: 16,185,129;\n  --primary-foreground: #ffffff;\n  --secondary: #dcfce7;\n  --secondary-foreground: #14532d;\n  --muted: #bbf7d0;\n  --muted-foreground: #166534;\n  --accent: #059669;\n  --accent-foreground: #ffffff;\n  --destructive: #dc2626;\n  --card: #ffffff;\n  --card-foreground: #14532d;\n  --popover: #ffffff;\n  --popover-foreground: #14532d;\n  --border: #bbf7d0;\n  --input: #ffffff;\n  --ring: #10b981;\n  --chart-1: #10b981;\n  --chart-2: #059669;\n  --chart-3: #34d399;\n  --chart-4: #22c55e;\n  --chart-5: #6ee7b7;"
+  },
+  {
+   "id": "lavender",
+   "name": "Lavender",
+   "css": "--background: #faf5ff;\n  --foreground: #581c87;\n  --primary: #8b5cf6;\n  --primary-rgb: 139,92,246;\n  --primary-foreground: #ffffff;\n  --secondary: #f3e8ff;\n  --secondary-foreground: #581c87;\n  --muted: #e9d5ff;\n  --muted-foreground: #6b21a8;\n  --accent: #a78bfa;\n  --accent-foreground: #ffffff;\n  --destructive: #dc2626;\n  --card: #ffffff;\n  --card-foreground: #581c87;\n  --popover: #ffffff;\n  --popover-foreground: #581c87;\n  --border: #e9d5ff;\n  --input: #ffffff;\n  --ring: #8b5cf6;\n  --chart-1: #8b5cf6;\n  --chart-2: #a78bfa;\n  --chart-3: #c084fc;\n  --chart-4: #7c3aed;\n  --chart-5: #d8b4fe;"
+  },
+  {
+   "id": "monochrome",
+   "name": "Monochrome",
+   "css": "--background: #f9fafb;\n  --foreground: #111827;\n  --primary: #1f2937;\n  --primary-rgb: 31,41,55;\n  --primary-foreground: #ffffff;\n  --secondary: #f3f4f6;\n  --secondary-foreground: #111827;\n  --muted: #e5e7eb;\n  --muted-foreground: #4b5563;\n  --accent: #6b7280;\n  --accent-foreground: #ffffff;\n  --destructive: #dc2626;\n  --card: #ffffff;\n  --card-foreground: #111827;\n  --popover: #ffffff;\n  --popover-foreground: #111827;\n  --border: #e5e7eb;\n  --input: #ffffff;\n  --ring: #1f2937;\n  --chart-1: #1f2937;\n  --chart-2: #4b5563;\n  --chart-3: #6b7280;\n  --chart-4: #374151;\n  --chart-5: #9ca3af;"
+  },
+  {
+   "id": "neon",
+   "name": "Neon",
+   "css": "--background: #0a0a0a;\n  --foreground: #ffffff;\n  --primary: #ff00ff;\n  --primary-rgb: 255,0,255;\n  --primary-foreground: #ffffff;\n  --secondary: #1a1a2e;\n  --secondary-foreground: #ffffff;\n  --muted: #16213e;\n  --muted-foreground: #b4b4b4;\n  --accent: #00ffff;\n  --accent-foreground: #000000;\n  --destructive: #ff006e;\n  --card: #16213e;\n  --card-foreground: #ffffff;\n  --popover: #1a1a2e;\n  --popover-foreground: #ffffff;\n  --border: #00ffff;\n  --input: #16213e;\n  --ring: #ff00ff;\n  --chart-1: #ff00ff;\n  --chart-2: #00ffff;\n  --chart-3: #39ff14;\n  --chart-4: #ff006e;\n  --chart-5: #ffd700;"
+  },
+  {
+   "id": "midnight",
+   "name": "Midnight",
+   "css": "--background: #0f172a;\n  --foreground: #f8fafc;\n  --primary: #38bdf8;\n  --primary-rgb: 56,189,248;\n  --primary-foreground: #0f172a;\n  --secondary: #1e293b;\n  --secondary-foreground: #f8fafc;\n  --muted: #334155;\n  --muted-foreground: #94a3b8;\n  --accent: #818cf8;\n  --accent-foreground: #ffffff;\n  --destructive: #f87171;\n  --card: #1e293b;\n  --card-foreground: #f8fafc;\n  --popover: #1e293b;\n  --popover-foreground: #f8fafc;\n  --border: #334155;\n  --input: #1e293b;\n  --ring: #38bdf8;\n  --chart-1: #38bdf8;\n  --chart-2: #818cf8;\n  --chart-3: #22d3ee;\n  --chart-4: #60a5fa;\n  --chart-5: #a5b4fc;"
+  },
+  {
+   "id": "peach",
+   "name": "Peach",
+   "css": "--background: #fff8f3;\n  --foreground: #78350f;\n  --primary: #fb923c;\n  --primary-rgb: 251,146,60;\n  --primary-foreground: #ffffff;\n  --secondary: #ffedd5;\n  --secondary-foreground: #78350f;\n  --muted: #fed7aa;\n  --muted-foreground: #9a3412;\n  --accent: #fdba74;\n  --accent-foreground: #78350f;\n  --destructive: #dc2626;\n  --card: #ffffff;\n  --card-foreground: #78350f;\n  --popover: #ffffff;\n  --popover-foreground: #78350f;\n  --border: #fed7aa;\n  --input: #ffffff;\n  --ring: #fb923c;\n  --chart-1: #fb923c;\n  --chart-2: #fdba74;\n  --chart-3: #fbbf24;\n  --chart-4: #f97316;\n  --chart-5: #fde68a;"
+  },
+  {
+   "id": "glacier",
+   "name": "Glacier",
+   "css": "--background: #ecfeff;\n  --foreground: #164e63;\n  --primary: #06b6d4;\n  --primary-rgb: 6,182,212;\n  --primary-foreground: #ffffff;\n  --secondary: #cffafe;\n  --secondary-foreground: #164e63;\n  --muted: #a5f3fc;\n  --muted-foreground: #0e7490;\n  --accent: #22d3ee;\n  --accent-foreground: #164e63;\n  --destructive: #dc2626;\n  --card: #ffffff;\n  --card-foreground: #164e63;\n  --popover: #ffffff;\n  --popover-foreground: #164e63;\n  --border: #a5f3fc;\n  --input: #ffffff;\n  --ring: #06b6d4;\n  --chart-1: #06b6d4;\n  --chart-2: #22d3ee;\n  --chart-3: #67e8f9;\n  --chart-4: #0891b2;\n  --chart-5: #a5f3fc;"
+  },
+  {
+   "id": "rose-gold",
+   "name": "Rose Gold",
+   "css": "--background: #fff1f2;\n  --foreground: #881337;\n  --primary: #f43f5e;\n  --primary-rgb: 244,63,94;\n  --primary-foreground: #ffffff;\n  --secondary: #ffe4e6;\n  --secondary-foreground: #881337;\n  --muted: #fecdd3;\n  --muted-foreground: #9f1239;\n  --accent: #fb7185;\n  --accent-foreground: #ffffff;\n  --destructive: #dc2626;\n  --card: #ffffff;\n  --card-foreground: #881337;\n  --popover: #ffffff;\n  --popover-foreground: #881337;\n  --border: #fecdd3;\n  --input: #ffffff;\n  --ring: #f43f5e;\n  --chart-1: #f43f5e;\n  --chart-2: #fb7185;\n  --chart-3: #fda4af;\n  --chart-4: #e11d48;\n  --chart-5: #fbbf24;"
+  },
+  {
+   "id": "cyber",
+   "name": "Cyber",
+   "css": "--background: #000000;\n  --foreground: #00ff41;\n  --primary: #00ff41;\n  --primary-rgb: 0,255,65;\n  --primary-foreground: #000000;\n  --secondary: #0a0e27;\n  --secondary-foreground: #00ff41;\n  --muted: #1a1a2e;\n  --muted-foreground: #39ff14;\n  --accent: #00d9ff;\n  --accent-foreground: #000000;\n  --destructive: #ff0055;\n  --card: #0a0e27;\n  --card-foreground: #00ff41;\n  --popover: #0a0e27;\n  --popover-foreground: #00ff41;\n  --border: #00ff41;\n  --input: #0a0e27;\n  --ring: #00ff41;\n  --chart-1: #00ff41;\n  --chart-2: #00d9ff;\n  --chart-3: #ff00ff;\n  --chart-4: #39ff14;\n  --chart-5: #ffff00;"
+  }
+ ]
+}

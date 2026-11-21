@@ -18,6 +18,7 @@ import { DRAG_TYPE, type ActiveDrag } from "@/components/browse/drag";
 import { BrowseDragOverlay } from "@/components/browse/drag-overlay";
 import { UnifiedGrid } from "@/components/browse/unified-grid";
 import { UnifiedTable } from "@/components/browse/unified-table";
+import { RelationshipMap } from "@/components/browse/relationship-map";
 import { ViewModeToggle } from "@/components/browse/view-mode-toggle";
 import { AccessWarningDialog, NewFolderDialog } from "@/components/browse/dialogs";
 import {
@@ -223,6 +224,7 @@ export function DocumentsPage() {
           {searching ? "Results" : "Documents"}
         </h2>
         <div className="flex items-center gap-2">
+          <RelationshipMap />
           <ViewModeToggle />
           <Button
             variant="outline"
@@ -254,6 +256,12 @@ export function DocumentsPage() {
       </div>
 
       {!searching && <FeaturedItems />}
+      {!searching && !empty && (
+        <p className="mb-4 text-sm text-[var(--muted-foreground)]">
+          Browse folders or use Map to explore nested documents. Search finds documents
+          across your library.
+        </p>
+      )}
 
       {docs.error ? (
         <EmptyState

@@ -50,6 +50,7 @@ import { DRAG_TYPE, type ActiveDrag } from "@/components/browse/drag";
 import { BrowseDragOverlay } from "@/components/browse/drag-overlay";
 import { UnifiedGrid } from "@/components/browse/unified-grid";
 import { UnifiedTable } from "@/components/browse/unified-table";
+import { RelationshipMap } from "@/components/browse/relationship-map";
 import { ViewModeToggle } from "@/components/browse/view-mode-toggle";
 import { AccessWarningDialog, NewFolderDialog } from "@/components/browse/dialogs";
 import { useBridgeHost } from "./use-bridge-host";
@@ -102,6 +103,7 @@ export function FolderPage() {
     [pins.data],
   );
 
+  const [filter, setFilter] = useState("");
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [renameOpen, setRenameOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -207,6 +209,13 @@ export function FolderPage() {
     ? items.filter((entry) => entry.document?.id !== readme.id)
     : items;
   const breadcrumbs = f.ancestors || [];
+  const filteredItems = visibleItems.filter((entry) =>
+    (entry.folder?.title || entry.document?.title || "")
+      .toLocaleLowerCase()
+      .includes(filter.trim().toLocaleLowerCase()),
+  );
+  const folderCount = items.filter((entry) => entry.type === "folder").length;
+  const documentCount = items.filter((entry) => entry.type === "document").length;
 
   function handleDragStart(event: DragStartEvent) {
     const raw = event.active.id as string;
@@ -240,7 +249,10 @@ export function FolderPage() {
     >
       <Page>
         {/* Breadcrumbs */}
-        <nav className="mb-4 flex min-w-0 items-center gap-1 overflow-x-auto whitespace-nowrap text-sm text-[var(--muted-foreground)]">
+        <nav
+          aria-label="Folder location"
+          className="mb-4 flex min-w-0 items-center gap-1 overflow-x-auto whitespace-nowrap text-sm text-[var(--muted-foreground)]"
+        >
           <DroppableBreadcrumb
             dropId="drop:__root__"
             to="/app/documents"
@@ -259,7 +271,12 @@ export function FolderPage() {
             </span>
           ))}
           <ChevronRight className="h-3 w-3" />
-          <span className="shrink-0 font-medium text-[var(--foreground)]">{f.title}</span>
+          <span
+            aria-current="page"
+            className="shrink-0 font-medium text-[var(--foreground)]"
+          >
+            {f.title}
+          </span>
         </nav>
 
         {/* Header */}
@@ -273,11 +290,14 @@ export function FolderPage() {
                 {f.title}
               </h1>
               <p className="truncate text-sm text-[var(--muted-foreground)]">
-                {f.owner?.name || f.owner?.email || ""}
+                {folderCount} {folderCount === 1 ? "folder" : "folders"} ·{" "}
+                {documentCount} {documentCount === 1 ? "document" : "documents"}
+                {f.owner?.name ? ` · ${f.owner.name}` : ""}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <RelationshipMap folderId={id} />
             <ViewModeToggle />
             <Button
               variant="outline"
@@ -361,13 +381,36 @@ export function FolderPage() {
         </AlertDialog>
 
         {/* Contents */}
+        {visibleItems.length > 0 && (
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <Input
+              aria-label="Filter this folder"
+              placeholder="Filter this folder by name…"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="sm:max-w-xs"
+            />
+            <p className="text-xs text-[var(--muted-foreground)]">
+              Drag items into a folder or onto a location above to move them.
+            </p>
+          </div>
+        )}
         {visibleItems.length === 0 && !readme ? (
           <EmptyState
             title="Empty folder"
             description="Add documents or create subfolders."
           />
+        ) : filteredItems.length === 0 && filter.trim() ? (
+          <div className="py-8 text-center">
+            <p className="text-sm text-[var(--muted-foreground)]">
+              No items match “{filter}” in this folder.
+            </p>
+            <Button variant="ghost" size="sm" onClick={() => setFilter("")}>
+              Clear filter
+            </Button>
+          </div>
         ) : (
-          <FolderContents items={visibleItems} pinnedIds={pinnedIds} />
+          <FolderContents items={filteredItems} pinnedIds={pinnedIds} />
         )}
         {readme ? <FolderReadme document={readme} /> : null}
 
@@ -483,6 +526,7 @@ function FolderContents({
     const ap = pinnedIds.has(aid);
     const bp = pinnedIds.has(bid);
     if (ap !== bp) return ap ? -1 : 1;
+    if (a.type !== b.type) return a.type === "folder" ? -1 : 1;
     const ta = a.last_active || "";
     const tb = b.last_active || "";
     if (ta && tb) return tb.localeCompare(ta);

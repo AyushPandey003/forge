@@ -1,3 +1,4 @@
+import { installCanvasComments } from "./canvas-comments.ts";
 import { textLinkAnchor } from "./text-link.ts";
 import { renderedTextFromRange } from "./anchoring/rendered-text.ts";
 import { snapshotForPrint } from "./document-export.ts";
@@ -1629,10 +1630,17 @@ type Theme = "dark" | "light";
       });
   }
 
+  let paintCanvas: ReturnType<typeof installCanvasComments>;
   function setupFrame(): void {
     const d = doc();
     if (!d || !d.documentElement || !d.body || setupDoc === d) return;
     setupDoc = d;
+    paintCanvas = installCanvasComments(
+      d,
+      (quote) =>
+        parent.postMessage({ type: "slashdocs:selection", quote }, targetOrigin()),
+      (id) => parent.postMessage({ type: "slashdocs:activate", id }, targetOrigin()),
+    );
     pendingText = null;
     textVisibilityObserver?.disconnect();
     clearTimeout(textRetryTimer);
@@ -1938,8 +1946,14 @@ type Theme = "dark" | "light";
       else pending?.reject();
       return;
     }
-    if (e.data.type === "slashdocs:paint") paint(e.data.comments, e.data.active);
-    else if (e.data.type === "slashdocs:theme") applyTheme(e.data.theme);
+    if (e.data.type === "slashdocs:paint") {
+      const comments = Array.isArray(e.data.comments) ? e.data.comments : [];
+      paintCanvas?.(comments, e.data.active);
+      paint(
+        comments.filter((c: { quote?: string }) => !c.quote?.startsWith("[Screen: ")),
+        e.data.active,
+      );
+    } else if (e.data.type === "slashdocs:theme") applyTheme(e.data.theme);
     else if (e.data.type === "slashdocs:kv-response") {
       const requestId = String(e.data.requestId || "");
       const pending = kvPending[requestId];

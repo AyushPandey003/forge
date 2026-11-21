@@ -1,3 +1,4 @@
+import { DocumentLocation } from "./document-location";
 import { Trash2 } from "lucide-react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,8 @@ export function UnifiedTable({
               canDelete={samePrincipal(principal, e.document.owner)}
               pinned={pinnedIds?.has(docID(e.document))}
               snippet={e.document.snippet}
+              parentFolder={e.document.parent_folder}
+              parentFolderId={e.document.parent_folder_id}
             />
           );
         }
@@ -68,6 +71,8 @@ function DraggableEntryRow({
   canDelete,
   pinned,
   snippet,
+  parentFolder,
+  parentFolderId,
 }: {
   type: ResourceType;
   id: string;
@@ -76,6 +81,8 @@ function DraggableEntryRow({
   canDelete: boolean;
   pinned?: boolean;
   snippet?: string;
+  parentFolder?: { id: string; title: string };
+  parentFolderId?: string;
 }) {
   const isFolder = type === "folder";
   const {
@@ -112,6 +119,14 @@ function DraggableEntryRow({
         >
           {pinned && <PinnedMark />}
         </EntryName>
+        {!isFolder && (
+          <div className="pl-6">
+            <DocumentLocation
+              parentFolder={parentFolder}
+              parentFolderId={parentFolderId}
+            />
+          </div>
+        )}
         {snippet ? (
           <SearchSnippet text={snippet} className="mt-1 line-clamp-2 pl-6 text-xs" />
         ) : null}

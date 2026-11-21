@@ -369,6 +369,7 @@ func (s *Server) routes(deps dependencies) {
 	authed.POST("/forge/designs/:id/revise", h.forgeReviseDesign)
 	authed.GET("/forge/jobs/:id", h.forgeJobStatus)
 	h.registerForgeRoutes(authed)
+	h.registerForgeAIRoutes(authed)
 	h.registerLocalAccountAdmin(authed)
 }
 

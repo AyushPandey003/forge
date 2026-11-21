@@ -29,6 +29,7 @@ import (
 
 	"github.com/razorpay/slashdocs/api/internal/auth"
 	forgepkg "github.com/razorpay/slashdocs/api/internal/forge"
+	"github.com/razorpay/slashdocs/api/internal/forge/design"
 	"github.com/razorpay/slashdocs/api/internal/repo"
 	"github.com/razorpay/slashdocs/api/internal/stitch"
 )
@@ -39,10 +40,13 @@ const (
 )
 
 type forgeDesignMeta struct {
-	Kind          string `json:"kind"` // "design"
-	StitchProject string `json:"stitch_project"`
-	StitchScreen  string `json:"stitch_screen"`
-	DesignSystem  string `json:"design_system"`
+	Kind          string `json:"kind"`             // "design"
+	Engine        string `json:"engine,omitempty"` // "stitch" (default) or "canvas"
+	Model         string `json:"model,omitempty"`  // canvas engine: model used
+	Theme         string `json:"theme,omitempty"`  // canvas engine: theme id
+	StitchProject string `json:"stitch_project,omitempty"`
+	StitchScreen  string `json:"stitch_screen,omitempty"`
+	DesignSystem  string `json:"design_system,omitempty"`
 	Prompt        string `json:"prompt"`
 	DeviceType    string `json:"device_type"`
 	SourceDocID   string `json:"source_doc_id,omitempty"`
@@ -152,7 +156,9 @@ func now() string { return time.Now().UTC().Format(time.RFC3339) }
 // ---- HTTP ------------------------------------------------------------------
 
 type forgeStatusResponse struct {
-	Enabled       bool   `json:"enabled"`
+	Enabled bool `json:"enabled"`
+	// CustomModels is true when users can bring their own model provider.
+	CustomModels  bool   `json:"custom_models"`
 	DesignSystem  string `json:"design_system"`
 	DesignMDBytes int    `json:"design_md_bytes"`
 	StitchProject string `json:"stitch_project,omitempty"`
@@ -167,6 +173,7 @@ func (h handlers) forgeStatus(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, forgeStatusResponse{
 		Enabled:       forge.client.Configured(),
+		CustomModels:  h.deps.forge != nil && current(c) != nil && current(c).Type == auth.PrincipalUser,
 		DesignSystem:  name,
 		DesignMDBytes: len(forge.designMD),
 		StitchProject: forge.projectID,
@@ -179,6 +186,12 @@ type forgeDesignRequest struct {
 	DeviceType  string `json:"device_type"`
 	ModelID     string `json:"model_id"`
 	SourceDocID string `json:"source_doc_id"`
+	// Bring-your-own-model: when ProviderID is set the canvas engine is used
+	// instead of Stitch.
+	ProviderID string `json:"provider_id"`
+	Model      string `json:"model"`
+	Theme      string `json:"theme"`
+	OneScreen  bool   `json:"one_screen"`
 	// Optional: attach the published design to a solution stage.
 	SolutionID string `json:"solution_id"`
 	Stage      string `json:"stage"`
@@ -188,13 +201,13 @@ type forgeDesignRequest struct {
 
 // POST /v1/forge/designs: generate a new design document.
 func (h handlers) forgeCreateDesign(c *gin.Context) {
-	if !forge.client.Configured() {
-		c.JSON(http.StatusServiceUnavailable, errorResponse("forge_disabled", "Stitch is not configured on this server", nil))
-		return
-	}
 	var in forgeDesignRequest
 	if err := c.ShouldBindJSON(&in); err != nil || strings.TrimSpace(in.Prompt) == "" {
 		badRequest(c, "prompt is required")
+		return
+	}
+	if in.ProviderID == "" && !forge.client.Configured() {
+		c.JSON(http.StatusServiceUnavailable, errorResponse("forge_disabled", "Stitch is not configured on this server. Connect your own model provider to generate designs.", nil))
 		return
 	}
 	in.DeviceType = normalizeDevice(in.DeviceType)
@@ -225,14 +238,60 @@ func (h handlers) forgeCreateDesign(c *gin.Context) {
 			}
 		}
 	}
+	if in.ProviderID != "" {
+		cj, ok := h.prepareCanvasJob(c, p, in)
+		if !ok {
+			return
+		}
+		cj.theme, cj.oneScreen = in.Theme, in.OneScreen
+		job := forge.newJob(p)
+		go h.runCanvasJob(job, p, in, sourceSpec, cj)
+		c.JSON(http.StatusAccepted, job)
+		return
+	}
 	job := forge.newJob(p)
 	go h.runDesignJob(job, p, in, sourceSpec, "", "")
 	c.JSON(http.StatusAccepted, job)
 }
 
+// prepareCanvasJob validates a bring-your-own-model request and resolves the
+// caller's provider. It writes the error response itself.
+func (h handlers) prepareCanvasJob(c *gin.Context, p auth.Principal, in forgeDesignRequest) (canvasJob, bool) {
+	if p.Type != auth.PrincipalUser || h.deps.forge == nil {
+		forbidden(c, "model providers are only available to signed-in users")
+		return canvasJob{}, false
+	}
+	if in.Theme != "" && !design.KnownTheme(in.Theme) {
+		badRequest(c, "unknown theme")
+		return canvasJob{}, false
+	}
+	if forge.activeJobs(p.ID) >= maxActiveJobs {
+		c.JSON(http.StatusTooManyRequests, errorResponse("too_many_jobs", "You already have designs generating. Wait for one to finish.", nil))
+		return canvasJob{}, false
+	}
+	cfg, err := h.providerConfig(c.Request.Context(), p.ID, in.ProviderID, strings.TrimSpace(in.Model))
+	if err != nil {
+		if errors.Is(err, forgepkg.ErrNotFound) {
+			badRequest(c, "that model provider no longer exists")
+		} else {
+			forgeErr(c, err)
+		}
+		return canvasJob{}, false
+	}
+	if cfg.Model == "" {
+		badRequest(c, "choose a model")
+		return canvasJob{}, false
+	}
+	return canvasJob{cfg: cfg, providerID: in.ProviderID, model: cfg.Model}, true
+}
+
 type forgeReviseRequest struct {
 	Prompt     string   `json:"prompt"`
 	CommentIDs []string `json:"comment_ids"`
+	// Canvas designs: the model to use, and optionally one screen to revise.
+	ProviderID string `json:"provider_id"`
+	Model      string `json:"model"`
+	ScreenID   string `json:"screen_id"`
 }
 
 // POST /v1/forge/designs/:id/revise: apply feedback (a prompt and/or open
@@ -242,16 +301,16 @@ func (h handlers) forgeReviseDesign(c *gin.Context) {
 	if !h.needDocRole(c, docID, repo.RoleEditor) {
 		return
 	}
-	if !forge.client.Configured() {
-		c.JSON(http.StatusServiceUnavailable, errorResponse("forge_disabled", "Stitch is not configured on this server", nil))
-		return
-	}
 	var in forgeReviseRequest
 	_ = c.ShouldBindJSON(&in)
 	ctx := c.Request.Context()
 	meta, err := h.loadDesignMeta(ctx, docID)
 	if err != nil {
 		badRequest(c, "this document is not a Forge design")
+		return
+	}
+	if meta.Engine != forgeEngineCanvas && !forge.client.Configured() {
+		c.JSON(http.StatusServiceUnavailable, errorResponse("forge_disabled", "Stitch is not configured on this server", nil))
 		return
 	}
 	feedback := strings.TrimSpace(in.Prompt)
@@ -266,8 +325,24 @@ func (h handlers) forgeReviseDesign(c *gin.Context) {
 		return
 	}
 	p := *current(c)
-	job := forge.newJob(p)
 	ids := h.commentIDs(ctx, docID, in.CommentIDs)
+	if meta.Engine == forgeEngineCanvas {
+		if in.ProviderID == "" {
+			badRequest(c, "choose a model provider to revise this design")
+			return
+		}
+		req := forgeDesignRequest{Prompt: feedback, DeviceType: meta.DeviceType, ProviderID: in.ProviderID, Model: in.Model, resolve: ids}
+		cj, ok := h.prepareCanvasJob(c, p, req)
+		if !ok {
+			return
+		}
+		cj.reviseDocID, cj.screenID = docID, in.ScreenID
+		job := forge.newJob(p)
+		go h.runCanvasJob(job, p, req, "", cj)
+		c.JSON(http.StatusAccepted, job)
+		return
+	}
+	job := forge.newJob(p)
 	go h.runDesignJob(job, p, forgeDesignRequest{Prompt: feedback, DeviceType: meta.DeviceType, resolve: ids}, "", docID, meta.StitchScreen)
 	c.JSON(http.StatusAccepted, job)
 }
@@ -349,70 +424,13 @@ func (h handlers) runDesignJob(job *forgeJob, p auth.Principal, in forgeDesignRe
 	}
 	doc := wrapDesignHTML(htmlBytes, screen, in.Prompt)
 
-	stage("Publishing to Forge")
-	title := strings.TrimSpace(in.Title)
-	if title == "" {
-		title = screen.Title
-	}
-	if title == "" {
-		title = "Untitled design"
-	}
-	var docID, versionID string
-	if reviseDocID == "" {
-		d, v, err := h.deps.repository.CreateDocument(ctx, p, "Design · "+title, doc)
-		if err != nil {
-			fail(err)
-			return
-		}
-		docID, versionID = d.ID, v.ID
-		if h.deps.defaultDocPermission != repo.RoleNone {
-			_, _ = h.deps.repository.CreateGrant(ctx, "document", d.ID, auth.Principal{Type: auth.PrincipalAnyone}, h.deps.defaultDocPermission, p)
-		}
-		_, _ = h.deps.repository.ReplaceDocumentLabels(ctx, d.ID, []string{"design"}, p)
-		if in.SolutionID != "" && h.deps.forge != nil {
-			stage := in.Stage
-			if stage == "" {
-				stage = "prd"
-			}
-			if sol, err := h.deps.forge.GetSolution(ctx, in.SolutionID); err == nil {
-				h.placeInSolution(ctx, sol, d.ID, p)
-				_, _ = h.deps.repository.ReplaceDocumentLabels(ctx, d.ID, []string{"design", strings.ToLower(sol.Key)}, p)
-			}
-			if _, err := h.deps.forge.AddArtifact(ctx, forgepkg.AddArtifactInput{
-				SolutionID: in.SolutionID, Stage: stage, Kind: "design", DocumentID: d.ID, Title: title, CreatedBy: p.ID,
-			}); err != nil {
-				slog.Warn("forge: could not attach design to solution", slog.Any("error", err))
-			}
-		}
-	} else {
-		d, err := h.deps.repository.GetDocument(ctx, reviseDocID)
-		if err != nil {
-			fail(err)
-			return
-		}
-		summary := "Forge: " + firstLine(in.Prompt, 140)
-		v, err := h.deps.repository.CreateVersion(ctx, reviseDocID, d.CurrentVersionID, summary, doc, p)
-		if err != nil {
-			fail(err)
-			return
-		}
-		docID, versionID = reviseDocID, v.ID
-		_ = h.deps.repository.AppendDocumentEvent(ctx, docID, repo.DocumentEventDocument, nil, p)
-	}
 	meta := forgeDesignMeta{
-		Kind: "design", StitchProject: projectID, StitchScreen: screen.Name, DesignSystem: asset,
+		Kind: "design", Engine: forgeEngineStitch, StitchProject: projectID, StitchScreen: screen.Name, DesignSystem: asset,
 		Prompt: in.Prompt, DeviceType: in.DeviceType, SourceDocID: in.SourceDocID, UpdatedAt: now(),
 	}
-	raw, _ := json.Marshal(meta)
-	if _, err := h.deps.repository.PatchDocumentKV(ctx, docID, map[string]json.RawMessage{forgeKVDesign: raw}, nil, p); err != nil {
-		slog.Warn("forge: could not store design metadata", slog.Any("error", err))
+	if err := h.publishDesign(ctx, job, p, in, doc, screen.Title, reviseDocID, meta, ""); err != nil {
+		fail(err)
 	}
-	if len(in.resolve) > 0 {
-		h.closeAddressedComments(ctx, docID, versionID, in.resolve, p)
-	}
-	forge.update(job, func(j *forgeJob) {
-		j.Status, j.Stage, j.DocumentID, j.VersionID, j.FinishedAt = "done", "Published", docID, versionID, now()
-	})
 }
 
 // commentIDs returns the root ids of the open comments a revision addresses.
@@ -439,14 +457,18 @@ func (h handlers) commentIDs(ctx context.Context, docID string, want []string) [
 
 // closeAddressedComments replies on each addressed thread with a pointer to
 // the new version, then resolves it, so the review loop closes visibly.
-func (h handlers) closeAddressedComments(ctx context.Context, docID, versionID string, ids []string, p auth.Principal) {
+func (h handlers) closeAddressedComments(ctx context.Context, docID, versionID string, ids []string, p auth.Principal, meta forgeDesignMeta) {
 	v, err := h.deps.repository.GetVersion(ctx, versionID)
 	label := "a new version"
 	if err == nil {
 		label = fmt.Sprintf("v%d", v.Number)
 	}
 	for _, id := range ids {
-		body := "Addressed by Forge in " + label + " (generated with Stitch + Katalyst)."
+		how := "Stitch + Katalyst"
+		if meta.Engine == forgeEngineCanvas && meta.Model != "" {
+			how = meta.Model
+		}
+		body := "Addressed by Forge in " + label + " (generated with " + how + ")."
 		if _, err := h.deps.repository.CreateCommentReply(ctx, docID, id, body, p, nil); err != nil {
 			slog.Warn("forge: reply failed", slog.String("comment", id), slog.Any("error", err))
 		}
@@ -516,7 +538,7 @@ func (h handlers) loadDesignMeta(ctx context.Context, docID string) (forgeDesign
 		return forgeDesignMeta{}, errors.New("not a design")
 	}
 	var m forgeDesignMeta
-	if err := json.Unmarshal(raw, &m); err != nil || m.StitchScreen == "" {
+	if err := json.Unmarshal(raw, &m); err != nil || (m.StitchScreen == "" && m.Engine != forgeEngineCanvas) {
 		return forgeDesignMeta{}, errors.New("not a design")
 	}
 	return m, nil
@@ -604,4 +626,65 @@ func htmlToText(s string) string {
 		}
 	}
 	return strings.Join(kept, "\n")
+}
+
+// publishDesign stores a generated design as a document (or a new version of
+// one), records its metadata, closes addressed comments and settles the job.
+// It is shared by the Stitch and canvas engines.
+func (h handlers) publishDesign(ctx context.Context, job *forgeJob, p auth.Principal, in forgeDesignRequest, doc []byte, title, reviseDocID string, meta forgeDesignMeta, note string) error {
+	forge.update(job, func(j *forgeJob) { j.Status, j.Stage = "running", "Publishing to Forge" })
+	title = strings.TrimSpace(title)
+	if title == "" {
+		title = "Untitled design"
+	}
+	var docID, versionID string
+	if reviseDocID == "" {
+		d, v, err := h.deps.repository.CreateDocument(ctx, p, "Design · "+title, doc)
+		if err != nil {
+			return err
+		}
+		docID, versionID = d.ID, v.ID
+		if h.deps.defaultDocPermission != repo.RoleNone {
+			_, _ = h.deps.repository.CreateGrant(ctx, "document", d.ID, auth.Principal{Type: auth.PrincipalAnyone}, h.deps.defaultDocPermission, p)
+		}
+		_, _ = h.deps.repository.ReplaceDocumentLabels(ctx, d.ID, []string{"design"}, p)
+		if in.SolutionID != "" && h.deps.forge != nil {
+			stage := in.Stage
+			if stage == "" {
+				stage = "prd"
+			}
+			if sol, err := h.deps.forge.GetSolution(ctx, in.SolutionID); err == nil {
+				h.placeInSolution(ctx, sol, d.ID, p)
+				_, _ = h.deps.repository.ReplaceDocumentLabels(ctx, d.ID, []string{"design", strings.ToLower(sol.Key)}, p)
+			}
+			if _, err := h.deps.forge.AddArtifact(ctx, forgepkg.AddArtifactInput{
+				SolutionID: in.SolutionID, Stage: stage, Kind: "design", DocumentID: d.ID, Title: title, CreatedBy: p.ID,
+			}); err != nil {
+				slog.Warn("forge: could not attach design to solution", slog.Any("error", err))
+			}
+		}
+	} else {
+		d, err := h.deps.repository.GetDocument(ctx, reviseDocID)
+		if err != nil {
+			return err
+		}
+		summary := "Forge: " + firstLine(in.Prompt, 140)
+		v, err := h.deps.repository.CreateVersion(ctx, reviseDocID, d.CurrentVersionID, summary, doc, p)
+		if err != nil {
+			return err
+		}
+		docID, versionID = reviseDocID, v.ID
+		_ = h.deps.repository.AppendDocumentEvent(ctx, docID, repo.DocumentEventDocument, nil, p)
+	}
+	raw, _ := json.Marshal(meta)
+	if _, err := h.deps.repository.PatchDocumentKV(ctx, docID, map[string]json.RawMessage{forgeKVDesign: raw}, nil, p); err != nil {
+		slog.Warn("forge: could not store design metadata", slog.Any("error", err))
+	}
+	if len(in.resolve) > 0 {
+		h.closeAddressedComments(ctx, docID, versionID, in.resolve, p, meta)
+	}
+	forge.update(job, func(j *forgeJob) {
+		j.Status, j.Stage, j.DocumentID, j.VersionID, j.FinishedAt = "done", "Published"+note, docID, versionID, now()
+	})
+	return nil
 }

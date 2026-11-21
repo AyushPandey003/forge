@@ -19,6 +19,7 @@ var (
 	ErrNotFound  = errors.New("not found")
 	ErrForbidden = errors.New("forbidden")
 	ErrInvalid   = errors.New("invalid")
+	ErrConflict  = errors.New("conflict")
 )
 
 // Store is Forge's persistence. It talks to the same Postgres as slashdocs.
