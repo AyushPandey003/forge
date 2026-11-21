@@ -52,9 +52,6 @@ services:
       STITCH_API_KEY: ${STITCH_API_KEY:-}
       STITCH_CREDENTIALS_FILE: /src/.secrets/stitch-personal.json
       STITCH_PROJECT: forge-stitch-261104
-      # Local accounts: invite links + username/password (dev only).
-      FORGE_LOCAL_AUTH: "true"
-      FORGE_LOCAL_ADMIN_EMAIL: admin@example.com
       FORGE_DESIGN_MD: /src/design/katalyst.DESIGN.md
       FORGE_STITCH_PROJECT_ID: "3828330232627373588"
       FORGE_STITCH_DESIGN_SYSTEM: assets/dab0e246b3314cee95056f31ce8da142
