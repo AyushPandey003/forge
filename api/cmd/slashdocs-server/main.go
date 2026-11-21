@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/razorpay/slashdocs/api/internal/forge"
 	"context"
 	"errors"
 	"fmt"
@@ -21,6 +20,7 @@ import (
 	"github.com/razorpay/slashdocs/api/internal/auth"
 	"github.com/razorpay/slashdocs/api/internal/blob"
 	"github.com/razorpay/slashdocs/api/internal/db"
+	"github.com/razorpay/slashdocs/api/internal/forge"
 	"github.com/razorpay/slashdocs/api/internal/googlegroups"
 	"github.com/razorpay/slashdocs/api/internal/kvevents"
 	"github.com/razorpay/slashdocs/api/internal/repo"

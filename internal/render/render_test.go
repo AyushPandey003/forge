@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"html"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -58,13 +59,28 @@ func requireBridgePattern(t *testing.T, pattern string) {
 	}
 }
 
+// Check user HTML independently of the host bridge. The bridge can legitimately
+// contain escaped closing tags in JavaScript strings that create nested frames.
+func renderedUserHTML(t *testing.T, wrapper string) string {
+	t.Helper()
+	match := regexp.MustCompile(`\bsrcdoc="([^"]*)"`).FindStringSubmatch(wrapper)
+	if len(match) != 2 {
+		t.Fatal("render wrapper is missing its srcdoc")
+	}
+	return html.UnescapeString(match[1])
+}
+
 func TestRenderWrapperPreservesInlineScriptClosingTag(t *testing.T) {
 	userHTML := []byte(`<html><body><script>window.__slashdocsRegression=42;</script></body></html>`)
 	out := string(Wrap(userHTML, "https://app.example"))
+	srcdoc := renderedUserHTML(t, out)
+	if !strings.Contains(srcdoc, `<script>window.__slashdocsRegression=42;</script>`) {
+		t.Fatal("user script was changed while wrapping")
+	}
 
 	for _, needle := range []string{`<\/script`, `&lt;\/script`, `<\\/script`} {
-		if strings.Contains(out, needle) {
-			t.Fatalf("rendered wrapper contains %q, which corrupts user inline <script>: %s", needle, out)
+		if strings.Contains(srcdoc, needle) {
+			t.Fatalf("user srcdoc contains %q, which corrupts user inline <script>: %s", needle, srcdoc)
 		}
 	}
 
@@ -321,8 +337,12 @@ func TestRenderWrapperScrubsOnlyRenderToken(t *testing.T) {
 func TestRenderWrapperLeavesScriptSubstringInJSAlone(t *testing.T) {
 	userHTML := []byte(`<html><body><script>var s = "</script>oops";</script></body></html>`)
 	out := string(Wrap(userHTML, "https://app.example"))
-	if strings.Contains(out, `\/script`) {
-		t.Fatalf("rendered wrapper still injects backslash before /script: %s", out)
+	srcdoc := renderedUserHTML(t, out)
+	if !strings.Contains(srcdoc, `<script>var s = "</script>oops";</script>`) {
+		t.Fatal("user JavaScript was changed while wrapping")
+	}
+	if strings.Contains(srcdoc, `\/script`) {
+		t.Fatalf("user srcdoc still injects backslash before /script: %s", srcdoc)
 	}
 	if !strings.Contains(out, `&lt;/script&gt;oops&#34;;&lt;/script&gt;`) {
 		t.Fatalf("expected both inline </script> occurrences to be HTML-entity-encoded; got: %s", out)

@@ -3,11 +3,12 @@ package design
 import (
 	"context"
 	"encoding/json"
-	"github.com/razorpay/slashdocs/api/internal/llm"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/razorpay/slashdocs/api/internal/llm"
 )
 
 func TestResolveRequestedDevice(t *testing.T) {

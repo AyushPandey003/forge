@@ -11,6 +11,7 @@ ARG BASE_IMAGE_PREFIX=""
 FROM --platform=$BUILDPLATFORM ${BASE_IMAGE_PREFIX}node:22-alpine AS frontend
 WORKDIR /src/frontend
 COPY frontend/package*.json ./
+COPY frontend/vendor ./vendor
 RUN npm ci
 COPY frontend ./
 # Build the static app and iframe bridge bundles for the Go server, and the
@@ -67,6 +68,7 @@ ARG SLASHDOCS_COMMIT_SHA=""
 # than running apk under emulation in the target-arch final stage.
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 WORKDIR /app
+COPY design/katalyst.DESIGN.md ./design/katalyst.DESIGN.md
 COPY --from=builder /out/slashdocs-server /usr/local/bin/slashdocs-server
 COPY --from=builder /out/slashdocs /usr/local/bin/slashdocs
 EXPOSE 8080
