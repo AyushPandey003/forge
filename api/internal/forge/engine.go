@@ -46,12 +46,12 @@ type StageStatus struct {
 }
 
 type Board struct {
-	Solution  Solution      `json:"solution"`
-	Members   []Member      `json:"members"`
-	Stages    []StageStatus `json:"stages"`
-	ViewerRoles []string    `json:"viewer_roles"`
-	CanManage bool          `json:"can_manage"`
-	CanAdvance bool         `json:"can_advance"`
+	Solution    Solution      `json:"solution"`
+	Members     []Member      `json:"members"`
+	Stages      []StageStatus `json:"stages"`
+	ViewerRoles []string      `json:"viewer_roles"`
+	CanManage   bool          `json:"can_manage"`
+	CanAdvance  bool          `json:"can_advance"`
 	// Progress 0..1 across all stages.
 	Progress float64 `json:"progress"`
 }
@@ -171,7 +171,9 @@ func evaluateGate(g Gate, stage string, members []Member, approvals []Approval, 
 	for _, u := range eligible {
 		gs.Approvers = append(gs.Approvers, u)
 	}
-	sort.Slice(gs.Approvers, func(i, j int) bool { return gs.Approvers[i].Name+gs.Approvers[i].Email < gs.Approvers[j].Name+gs.Approvers[j].Email })
+	sort.Slice(gs.Approvers, func(i, j int) bool {
+		return gs.Approvers[i].Name+gs.Approvers[i].Email < gs.Approvers[j].Name+gs.Approvers[j].Email
+	})
 	_, gs.CanDecide = eligible[viewerID]
 
 	// Latest decision per user (approvals are newest-first). An override is

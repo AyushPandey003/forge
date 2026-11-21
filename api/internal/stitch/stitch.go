@@ -48,10 +48,10 @@ type Config struct {
 
 func ConfigFromEnv() Config {
 	return Config{
-		Endpoint:     envOr("STITCH_BASE_URL", DefaultEndpoint),
-		APIKey:       os.Getenv("STITCH_API_KEY"),
-		AccessToken:  os.Getenv("STITCH_ACCESS_TOKEN"),
-		UseGcloud:    os.Getenv("STITCH_USE_GCLOUD") == "true",
+		Endpoint:        envOr("STITCH_BASE_URL", DefaultEndpoint),
+		APIKey:          os.Getenv("STITCH_API_KEY"),
+		AccessToken:     os.Getenv("STITCH_ACCESS_TOKEN"),
+		UseGcloud:       os.Getenv("STITCH_USE_GCLOUD") == "true",
 		QuotaProject:    os.Getenv("STITCH_PROJECT"),
 		CredentialsFile: os.Getenv("STITCH_CREDENTIALS_FILE"),
 	}

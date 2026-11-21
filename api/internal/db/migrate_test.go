@@ -2,6 +2,7 @@ package db_test
 
 import (
 	"database/sql"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -95,9 +96,14 @@ func TestCommentMentionMigrationsSplitTriggerFromLegacyCleanup(t *testing.T) {
 		t.Fatalf("migration 18 invariant body changed after cleanup: %q", got)
 	}
 	assertMentionMigrationObjects(t, database)
+	available, err := goose.CollectMigrations("migrations", 0, math.MaxInt64)
+	if err != nil || len(available) == 0 {
+		t.Fatalf("collect latest migrations: %v", err)
+	}
+	latest := available[len(available)-1].Version
 	version, err := goose.GetDBVersion(database)
-	if err != nil || version != 36 {
-		t.Fatalf("migration version = %d, %v; want 36", version, err)
+	if err != nil || version != latest {
+		t.Fatalf("migration version = %d, %v; want %d", version, err, latest)
 	}
 
 	// The cleanup cannot reconstruct markers, so migration 19's Down is a

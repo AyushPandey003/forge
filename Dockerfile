@@ -11,6 +11,7 @@ ARG BASE_IMAGE_PREFIX=""
 FROM --platform=$BUILDPLATFORM ${BASE_IMAGE_PREFIX}node:22-alpine AS frontend
 WORKDIR /src/frontend
 COPY frontend/package*.json ./
+COPY frontend/vendor ./vendor
 RUN npm ci
 COPY frontend ./
 # Build the static app and iframe bridge bundles for the Go server, and the
