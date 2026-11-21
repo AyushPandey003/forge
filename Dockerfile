@@ -68,6 +68,7 @@ ARG SLASHDOCS_COMMIT_SHA=""
 # than running apk under emulation in the target-arch final stage.
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 WORKDIR /app
+COPY design/katalyst.DESIGN.md ./design/katalyst.DESIGN.md
 COPY --from=builder /out/slashdocs-server /usr/local/bin/slashdocs-server
 COPY --from=builder /out/slashdocs /usr/local/bin/slashdocs
 EXPOSE 8080

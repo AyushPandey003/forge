@@ -88,7 +88,11 @@ func newForgeState() *forgeState {
 	if a := os.Getenv("FORGE_STITCH_DESIGN_SYSTEM"); a != "" {
 		s.assetName = a
 	}
-	if path := os.Getenv("FORGE_DESIGN_MD"); path != "" {
+	path := os.Getenv("FORGE_DESIGN_MD")
+	if path == "" {
+		path = "design/katalyst.DESIGN.md"
+	}
+	{
 		if b, err := os.ReadFile(path); err == nil {
 			s.designMD = b
 		} else {
